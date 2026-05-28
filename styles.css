@@ -316,6 +316,12 @@ textarea:focus {
   gap: 12px;
 }
 
+.recent-daily-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .empty-state {
   padding: 22px 10px;
   color: var(--muted);
@@ -331,6 +337,54 @@ textarea:focus {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 800;
+}
+
+.recent-day-card {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.recent-day-head {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.recent-day-head h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.recent-day-head span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.recent-day-lines {
+  display: grid;
+  gap: 7px;
+}
+
+.recent-day-lines p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.recent-day-lines strong {
+  color: var(--teal-dark);
+  font-size: 0.82rem;
+}
+
+.recent-day-lines span {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
 }
 
 .daily-summary-card {
@@ -606,6 +660,7 @@ textarea:focus {
 
   .summary-grid,
   .form-grid,
+  .recent-daily-list,
   .daily-summary-grid,
   .backup-actions {
     grid-template-columns: 1fr;

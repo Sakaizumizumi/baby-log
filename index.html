@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="新生儿记录">
     <title>新生儿记录</title>
-    <link rel="manifest" href="manifest.webmanifest?v=8">
+    <link rel="manifest" href="manifest.webmanifest?v=11">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=8">
+    <link rel="stylesheet" href="styles.css?v=11">
   </head>
   <body>
     <div class="app-shell">
@@ -90,6 +90,13 @@
                     <input id="amountMl" type="number" inputmode="decimal" min="0" step="1" placeholder="0">
                   </label>
                   <label class="field" data-feed-breast>
+                    <span>记录方式</span>
+                    <select id="breastMode">
+                      <option value="timer">开始计时</option>
+                      <option value="manual">补记时长</option>
+                    </select>
+                  </label>
+                  <label class="field" data-feed-breast>
                     <span>左右侧</span>
                     <select id="feedSide">
                       <option value="">未填</option>
@@ -98,6 +105,10 @@
                       <option value="both">两侧</option>
                       <option value="none">不适用</option>
                     </select>
+                  </label>
+                  <label class="field" data-breast-manual>
+                    <span>持续分钟</span>
+                    <input id="durationMin" type="number" inputmode="numeric" min="1" step="1" placeholder="例如 15">
                   </label>
                 </div>
               </div>
@@ -166,6 +177,13 @@
           <div class="history-list" id="historyList" aria-live="polite"></div>
         </section>
 
+        <section class="tool-panel" aria-labelledby="recentDailySummaryTitle">
+          <div class="section-header">
+            <h2 id="recentDailySummaryTitle">近五日总结</h2>
+          </div>
+          <div class="recent-daily-list" id="recentDailySummaryList" aria-live="polite"></div>
+        </section>
+
         <section class="tool-panel" aria-labelledby="dailySummaryTitle">
           <div class="section-header">
             <h2 id="dailySummaryTitle">每日总结</h2>
@@ -181,7 +199,7 @@
             <button class="secondary-button" type="button" id="exportCsv">导出 CSV</button>
             <button class="secondary-button" type="button" id="exportJson">导出 JSON</button>
             <label class="secondary-button file-button">
-              恢复 JSON
+              导入合并
               <input id="importJson" type="file" accept="application/json,.json">
             </label>
           </div>
@@ -300,6 +318,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=8" defer></script>
+    <script src="app.js?v=11" defer></script>
   </body>
 </html>

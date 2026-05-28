@@ -69,6 +69,7 @@
 
   function cacheElements() {
     els.recordTime = byId("recordTime");
+    els.breastMode = byId("breastMode");
     els.otherFeedMethod = byId("otherFeedMethod");
     els.amountMl = byId("amountMl");
     els.feedSide = byId("feedSide");
@@ -86,6 +87,7 @@
     els.nowButton = byId("nowButton");
     els.historyFilter = byId("historyFilter");
     els.historyList = byId("historyList");
+    els.recentDailySummaryList = byId("recentDailySummaryList");
     els.dailySummaryList = byId("dailySummaryList");
     els.lastFeed = byId("lastFeed");
     els.lastFeedGap = byId("lastFeedGap");
@@ -129,6 +131,7 @@
       addRecord(state.selectedAction);
     });
     els.clearRecordSelection.addEventListener("click", clearRecordSelection);
+    els.breastMode.addEventListener("change", updateRecordSelection);
 
     els.nowButton.addEventListener("click", function () {
       els.recordTime.value = nowShanghaiLocalInput();
@@ -190,7 +193,19 @@
     if (record.type === "feed") {
       record.feed = readFeedFields("", action === "breast" ? "breast" : valueOf("otherFeedMethod") || "other");
       if (record.feed.method === "breast") {
-        record.feed.status = "active";
+        if (els.breastMode.value === "manual") {
+          if (!record.feed.durationMin || record.feed.durationMin <= 0) {
+            showToast("请填写母乳持续分钟");
+            els.durationMin.focus();
+            return;
+          }
+          record.feed.status = "done";
+          record.feed.endedAt = new Date(new Date(timeIso).getTime() + record.feed.durationMin * 60000).toISOString();
+        } else {
+          record.feed.status = "active";
+          delete record.feed.durationMin;
+          delete record.feed.endedAt;
+        }
       }
     } else {
       record.diaper = readDiaperFields("", action);
@@ -220,9 +235,12 @@
     els.feedDetailGroup.hidden = !isFeedAction(action);
     els.diaperDetailGroup.hidden = !hasAction || isFeedAction(action);
     els.selectedRecordTitle.textContent = hasAction ? recordActionTitle(action) + "详情" : "详情";
-    els.saveRecord.textContent = action === "breast" ? "开始母乳" : "保存记录";
+    els.saveRecord.textContent = action === "breast" && els.breastMode.value === "timer" ? "开始母乳" : "保存记录";
     document.querySelectorAll("[data-feed-breast]").forEach(function (field) {
       field.hidden = action !== "breast";
+    });
+    document.querySelectorAll("[data-breast-manual]").forEach(function (field) {
+      field.hidden = action !== "breast" || els.breastMode.value !== "manual";
     });
     document.querySelectorAll("[data-feed-other]").forEach(function (field) {
       field.hidden = action !== "otherFeed";
@@ -262,6 +280,7 @@
   function resetEntryFields() {
     els.recordTime.value = nowShanghaiLocalInput();
     state.selectedAction = "";
+    els.breastMode.value = "timer";
     els.otherFeedMethod.value = "bottle";
     els.amountMl.value = "";
     els.feedSide.value = "";
@@ -278,6 +297,7 @@
   function render() {
     renderSummary();
     renderHistory();
+    renderRecentDailySummary();
     renderDailySummary();
   }
 
@@ -353,6 +373,59 @@
     }).join("");
   }
 
+  function renderRecentDailySummary() {
+    var groups = groupByDate(
+      state.records.slice().sort(function (a, b) {
+        return new Date(b.time).getTime() - new Date(a.time).getTime();
+      })
+    ).slice(0, 5);
+
+    if (!groups.length) {
+      els.recentDailySummaryList.innerHTML = '<div class="empty-state">暂无近五日总结</div>';
+      return;
+    }
+
+    els.recentDailySummaryList.innerHTML = groups.map(renderRecentDailySummaryCard).join("");
+  }
+
+  function renderRecentDailySummaryCard(group) {
+    var stats = getDailyStats(group.records);
+    var lines = [
+      {
+        label: "喂奶",
+        value: stats.feeds.length + " 次 · 平均间隔 " + averageIntervalText(stats.feeds)
+      },
+      {
+        label: "母乳",
+        value: breastDurationText(stats.breastTotals)
+      },
+      {
+        label: "其他奶量",
+        value: formatAmount(stats.otherMilkMl)
+      },
+      {
+        label: "小便",
+        value: stats.peeRecords.length + " 次 · 平均间隔 " + averageIntervalText(stats.peeRecords)
+      },
+      {
+        label: "大便",
+        value: stats.poopRecords.length + " 次 · 平均间隔 " + averageIntervalText(stats.poopRecords)
+      }
+    ];
+
+    return '<article class="recent-day-card">' +
+      '<div class="recent-day-head">' +
+      '<h3>' + escapeHtml(group.title) + "</h3>" +
+      '<span>' + escapeHtml(formatDateRange(stats.records)) + "</span>" +
+      "</div>" +
+      '<div class="recent-day-lines">' +
+      lines.map(function (line) {
+        return '<p><strong>' + escapeHtml(line.label) + '</strong><span>' + escapeHtml(line.value) + "</span></p>";
+      }).join("") +
+      "</div>" +
+      "</article>";
+  }
+
   function renderDailySummary() {
     var groups = groupByDate(
       state.records.slice().sort(function (a, b) {
@@ -369,14 +442,45 @@
   }
 
   function renderDailySummaryGroup(group) {
-    var records = group.records.slice().sort(function (a, b) {
+    var stats = getDailyStats(group.records);
+
+    return '<section class="daily-summary-card">' +
+      '<div class="daily-summary-head">' +
+      '<h3>' + escapeHtml(group.title) + "</h3>" +
+      '<span>' + stats.feeds.length + ' 次喂奶 · ' + stats.peeRecords.length + ' 次小便 · ' + stats.poopRecords.length + ' 次大便</span>' +
+      "</div>" +
+      '<div class="daily-summary-grid">' +
+      renderSummaryBlock(
+        "喂奶",
+        [
+          "其他总奶量：" + formatAmount(stats.otherMilkMl),
+          "母乳持续：" + breastDurationText(stats.breastTotals)
+        ],
+        renderTimeline(stats.feeds, "暂无喂奶记录", feedTimelineLabel)
+      ) +
+      renderSummaryBlock(
+        "小便",
+        [],
+        renderTimeline(stats.peeRecords, "暂无小便记录", diaperTimelineLabel)
+      ) +
+      renderSummaryBlock(
+        "大便",
+        [],
+        renderTimeline(stats.poopRecords, "暂无大便记录", diaperTimelineLabel)
+      ) +
+      "</div>" +
+      "</section>";
+  }
+
+  function getDailyStats(records) {
+    var sortedRecords = records.slice().sort(function (a, b) {
       return new Date(a.time).getTime() - new Date(b.time).getTime();
     });
-    var feeds = records.filter(isFeed);
-    var peeRecords = records.filter(function (record) {
+    var feeds = sortedRecords.filter(isFeed);
+    var peeRecords = sortedRecords.filter(function (record) {
       return hasDiaperKind(record, "pee") || hasDiaperKind(record, "mixed");
     });
-    var poopRecords = records.filter(function (record) {
+    var poopRecords = sortedRecords.filter(function (record) {
       return hasDiaperKind(record, "poop") || hasDiaperKind(record, "mixed");
     });
     var otherMilkMl = feeds.reduce(function (sum, record) {
@@ -384,34 +488,15 @@
         ? sum
         : sum + (Number(record.feed && record.feed.amountMl) || 0);
     }, 0);
-    var breastTotals = summarizeBreastDurations(feeds);
 
-    return '<section class="daily-summary-card">' +
-      '<div class="daily-summary-head">' +
-      '<h3>' + escapeHtml(group.title) + "</h3>" +
-      '<span>' + feeds.length + ' 次喂奶 · ' + peeRecords.length + ' 次小便 · ' + poopRecords.length + ' 次大便</span>' +
-      "</div>" +
-      '<div class="daily-summary-grid">' +
-      renderSummaryBlock(
-        "喂奶",
-        [
-          "其他总奶量：" + formatAmount(otherMilkMl),
-          "母乳持续：" + breastDurationText(breastTotals)
-        ],
-        renderTimeline(feeds, "暂无喂奶记录", feedTimelineLabel)
-      ) +
-      renderSummaryBlock(
-        "小便",
-        [],
-        renderTimeline(peeRecords, "暂无小便记录", diaperTimelineLabel)
-      ) +
-      renderSummaryBlock(
-        "大便",
-        [],
-        renderTimeline(poopRecords, "暂无大便记录", diaperTimelineLabel)
-      ) +
-      "</div>" +
-      "</section>";
+    return {
+      records: sortedRecords,
+      feeds: feeds,
+      peeRecords: peeRecords,
+      poopRecords: poopRecords,
+      otherMilkMl: otherMilkMl,
+      breastTotals: summarizeBreastDurations(feeds)
+    };
   }
 
   function renderSummaryBlock(title, lines, timelineHtml) {
@@ -741,17 +826,18 @@
     reader.onload = function () {
       try {
         var payload = JSON.parse(String(reader.result || ""));
-        var records = normalizeImportedRecords(payload);
-        if (!window.confirm("用备份文件恢复 " + records.length + " 条记录？当前本机记录会被替换。")) {
+        var importedRecords = normalizeImportedRecords(payload);
+        var mergeResult = mergeRecords(state.records, importedRecords);
+        if (!window.confirm("导入 " + importedRecords.length + " 条记录，并与本机记录自动合并？")) {
           return;
         }
 
-        state.records = records;
+        state.records = mergeResult.records;
         saveRecords();
         render();
-        showToast("已恢复 JSON");
+        showToast("已合并：新增 " + mergeResult.added + "，更新 " + mergeResult.updated + "，跳过 " + mergeResult.skipped);
       } catch (error) {
-        showToast("JSON 文件无法恢复");
+        showToast("JSON 文件无法导入");
       } finally {
         els.importJson.value = "";
       }
@@ -784,6 +870,50 @@
         updatedAt: record.updatedAt ? new Date(record.updatedAt).toISOString() : new Date().toISOString()
       });
     });
+  }
+
+  function mergeRecords(currentRecords, importedRecords) {
+    var byId = {};
+    var added = 0;
+    var updated = 0;
+    var skipped = 0;
+
+    currentRecords.forEach(function (record) {
+      byId[record.id] = cleanRecord(record);
+    });
+
+    importedRecords.forEach(function (incoming) {
+      var existing = byId[incoming.id];
+      if (!existing) {
+        byId[incoming.id] = cleanRecord(incoming);
+        added += 1;
+        return;
+      }
+
+      if (recordTimestamp(incoming) > recordTimestamp(existing)) {
+        byId[incoming.id] = cleanRecord(incoming);
+        updated += 1;
+      } else {
+        skipped += 1;
+      }
+    });
+
+    return {
+      records: Object.keys(byId).map(function (id) {
+        return byId[id];
+      }).sort(function (a, b) {
+        return new Date(a.time).getTime() - new Date(b.time).getTime();
+      }),
+      added: added,
+      updated: updated,
+      skipped: skipped
+    };
+  }
+
+  function recordTimestamp(record) {
+    var source = record && (record.updatedAt || record.createdAt || record.time);
+    var timestamp = new Date(source).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
   }
 
   function cleanRecord(record) {
@@ -1115,6 +1245,24 @@
     return formatMinuteCount(minutes);
   }
 
+  function averageIntervalText(records) {
+    if (records.length < 2) {
+      return "--";
+    }
+    var totalMinutes = 0;
+    for (var index = 1; index < records.length; index += 1) {
+      totalMinutes += Math.max(0, Math.round((new Date(records[index].time).getTime() - new Date(records[index - 1].time).getTime()) / 60000));
+    }
+    return formatMinuteCount(Math.round(totalMinutes / (records.length - 1)));
+  }
+
+  function formatDateRange(records) {
+    if (!records.length) {
+      return "无记录";
+    }
+    return formatTime(records[0].time) + " - " + formatTime(records[records.length - 1].time);
+  }
+
   function formatMinuteCount(minutes) {
     var safeMinutes = Math.max(0, Number(minutes) || 0);
     if (safeMinutes < 1) {
@@ -1209,7 +1357,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=8").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=11").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }
