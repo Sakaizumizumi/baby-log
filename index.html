@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="新生儿记录">
     <title>新生儿记录</title>
-    <link rel="manifest" href="manifest.webmanifest?v=12">
+    <link rel="manifest" href="manifest.webmanifest?v=15">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=12">
+    <link rel="stylesheet" href="styles.css?v=15">
   </head>
   <body>
     <div class="app-shell">
@@ -166,6 +166,7 @@
         <section class="tool-panel" aria-labelledby="recentDailySummaryTitle">
           <div class="section-header">
             <h2 id="recentDailySummaryTitle">近五日总结</h2>
+            <button class="secondary-button compact-button" type="button" id="exportRecentSummaryImage">导出图片</button>
           </div>
           <div class="recent-daily-list" id="recentDailySummaryList" aria-live="polite"></div>
         </section>
@@ -318,6 +319,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=12" defer></script>
+    <script src="app.js?v=15" defer></script>
   </body>
 </html>

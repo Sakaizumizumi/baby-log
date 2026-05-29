@@ -3,6 +3,7 @@
 
   var STORAGE_KEY = "baby-log:v1:records";
   var SCHEMA_VERSION = 1;
+  var DAY_ONE_DATE_KEY = "2026-05-26";
   var SHANGHAI_OFFSET_MINUTES = 8 * 60;
   var toastTimer = 0;
 
@@ -87,6 +88,7 @@
     els.nowButton = byId("nowButton");
     els.historyFilter = byId("historyFilter");
     els.historyList = byId("historyList");
+    els.exportRecentSummaryImage = byId("exportRecentSummaryImage");
     els.recentDailySummaryList = byId("recentDailySummaryList");
     els.dailySummaryList = byId("dailySummaryList");
     els.lastFeed = byId("lastFeed");
@@ -138,6 +140,7 @@
     });
 
     els.historyFilter.addEventListener("change", renderHistory);
+    els.exportRecentSummaryImage.addEventListener("click", exportRecentSummaryImage);
     els.exportCsv.addEventListener("click", exportCsv);
     els.exportJson.addEventListener("click", exportJson);
     els.importJson.addEventListener("change", importJson);
@@ -158,6 +161,13 @@
 
       if (button.dataset.intent === "delete") {
         deleteRecord(button.dataset.id);
+      }
+    });
+
+    els.dailySummaryList.addEventListener("click", function (event) {
+      var button = event.target.closest("button[data-summary-date]");
+      if (button) {
+        exportDailySummaryImage(button.dataset.summaryDate);
       }
     });
 
@@ -447,6 +457,7 @@
     return '<section class="daily-summary-card">' +
       '<div class="daily-summary-head">' +
       '<h3>' + escapeHtml(group.title) + "</h3>" +
+      '<button class="secondary-button compact-button" type="button" data-summary-date="' + escapeHtml(group.dateKey) + '">导出图片</button>' +
       '<span>' + stats.feeds.length + ' 次喂奶 · ' + stats.peeRecords.length + ' 次小便 · ' + stats.poopRecords.length + ' 次大便</span>' +
       "</div>" +
       '<div class="daily-summary-grid">' +
@@ -497,6 +508,116 @@
       otherMilkMl: otherMilkMl,
       breastTotals: summarizeBreastDurations(feeds)
     };
+  }
+
+  function exportRecentSummaryImage() {
+    var groups = groupByDate(
+      state.records.slice().sort(function (a, b) {
+        return new Date(b.time).getTime() - new Date(a.time).getTime();
+      })
+    ).slice(0, 5);
+
+    if (!groups.length) {
+      showToast("暂无近五日总结可导出");
+      return;
+    }
+
+    exportSummaryImage(
+      buildRecentSummaryImageData(groups),
+      "新生儿近五日总结-" + dateKeyFromIso(new Date().toISOString()) + ".png"
+    );
+  }
+
+  function exportDailySummaryImage(dateKey) {
+    var groups = groupByDate(
+      state.records.slice().sort(function (a, b) {
+        return new Date(b.time).getTime() - new Date(a.time).getTime();
+      })
+    );
+    var group = groups.find(function (item) {
+      return item.dateKey === dateKey;
+    });
+
+    if (!group) {
+      showToast("未找到这一天的总结");
+      return;
+    }
+
+    exportSummaryImage(
+      buildDailySummaryImageData(group),
+      "新生儿每日总结-" + group.dateKey + ".png"
+    );
+  }
+
+  function exportSummaryImage(data, filename) {
+    drawSummaryImage(data).then(function (blob) {
+      downloadBlob(blob, filename);
+      showToast("图片已导出");
+    }).catch(function () {
+      showToast("图片生成失败");
+    });
+  }
+
+  function buildRecentSummaryImageData(groups) {
+    var nowIso = new Date().toISOString();
+    return {
+      title: "近五日总结",
+      subtitle: "生成时间：" + dateKeyFromIso(nowIso) + " " + formatTime(nowIso),
+      sections: groups.map(function (group) {
+        var stats = getDailyStats(group.records);
+        return {
+          title: group.title + " · " + formatDateRange(stats.records),
+          lines: summaryOverviewLines(stats)
+        };
+      })
+    };
+  }
+
+  function buildDailySummaryImageData(group) {
+    var stats = getDailyStats(group.records);
+    return {
+      title: "每日总结 · " + group.title,
+      subtitle: "记录范围：" + formatDateRange(stats.records),
+      sections: [
+        {
+          title: "总览",
+          lines: summaryOverviewLines(stats)
+        },
+        {
+          title: "喂奶时间线",
+          lines: summaryTimelineLines(stats.feeds, "暂无喂奶记录", feedTimelineLabel)
+        },
+        {
+          title: "小便时间线",
+          lines: summaryTimelineLines(stats.peeRecords, "暂无小便记录", diaperTimelineLabel)
+        },
+        {
+          title: "大便时间线",
+          lines: summaryTimelineLines(stats.poopRecords, "暂无大便记录", diaperTimelineLabel)
+        }
+      ]
+    };
+  }
+
+  function summaryOverviewLines(stats) {
+    return [
+      "喂奶：" + stats.feeds.length + " 次 · 平均间隔 " + averageIntervalText(stats.feeds),
+      "母乳：" + breastDurationText(stats.breastTotals),
+      "其他奶量：" + formatAmount(stats.otherMilkMl),
+      "小便：" + stats.peeRecords.length + " 次 · 平均间隔 " + averageIntervalText(stats.peeRecords),
+      "大便：" + stats.poopRecords.length + " 次 · 平均间隔 " + averageIntervalText(stats.poopRecords)
+    ];
+  }
+
+  function summaryTimelineLines(records, emptyText, labelFn) {
+    if (!records.length) {
+      return [emptyText];
+    }
+
+    return records.map(function (record, index) {
+      var interval = index > 0 ? formatInterval(records[index - 1].time, record.time) : "--";
+      return formatTime(record.time) + " · " + labelFn(record) + " · 间隔 " + interval;
+    });
   }
 
   function renderSummaryBlock(title, lines, timelineHtml) {
@@ -995,6 +1116,7 @@
 
     return Object.keys(map).map(function (key) {
       return {
+        dateKey: key,
         title: formatDateTitle(key),
         records: map[key]
       };
@@ -1206,13 +1328,38 @@
   function formatDateTitle(dateKey) {
     var today = dateKeyFromIso(new Date().toISOString());
     var yesterday = dateKeyFromIso(new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+    var dayBeforeYesterday = dateKeyFromIso(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString());
+    var label = dateKey;
     if (dateKey === today) {
-      return "今天";
+      label = "今天";
+    } else if (dateKey === yesterday) {
+      label = "昨天";
+    } else if (dateKey === dayBeforeYesterday) {
+      label = "前天";
     }
-    if (dateKey === yesterday) {
-      return "昨天";
+    return label + dayNumberSuffix(dateKey);
+  }
+
+  function dayNumberSuffix(dateKey) {
+    var dayNumber = dayNumberFromDateKey(dateKey);
+    return dayNumber >= 1 ? " (第" + dayNumber + "天)" : "";
+  }
+
+  function dayNumberFromDateKey(dateKey) {
+    var target = dateKeyToUtcMs(dateKey);
+    var start = dateKeyToUtcMs(DAY_ONE_DATE_KEY);
+    if (!Number.isFinite(target) || !Number.isFinite(start)) {
+      return 0;
     }
-    return dateKey;
+    return Math.floor((target - start) / 86400000) + 1;
+  }
+
+  function dateKeyToUtcMs(dateKey) {
+    var parts = String(dateKey || "").split("-").map(Number);
+    if (parts.length !== 3 || parts.some(function (part) { return !Number.isFinite(part); })) {
+      return NaN;
+    }
+    return Date.UTC(parts[0], parts[1] - 1, parts[2]);
   }
 
   function formatTime(iso) {
@@ -1311,8 +1458,179 @@
     }).join(",");
   }
 
+  function drawSummaryImage(data) {
+    var width = 1080;
+    var padding = 64;
+    var canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = 100;
+    var ctx = canvas.getContext("2d");
+    var height = Math.ceil(renderSummaryCanvas(ctx, data, {
+      dryRun: true,
+      padding: padding,
+      width: width
+    }));
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx = canvas.getContext("2d");
+    renderSummaryCanvas(ctx, data, {
+      dryRun: false,
+      padding: padding,
+      width: width
+    });
+
+    return canvasToBlob(canvas);
+  }
+
+  function renderSummaryCanvas(ctx, data, options) {
+    var width = options.width;
+    var padding = options.padding;
+    var contentWidth = width - padding * 2;
+    var y = padding;
+
+    if (!options.dryRun) {
+      ctx.fillStyle = "#f6f7f1";
+      ctx.fillRect(0, 0, width, ctx.canvas.height);
+    }
+
+    y = drawCanvasText(ctx, data.title, {
+      color: "#223033",
+      dryRun: options.dryRun,
+      font: "700 52px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      lineHeight: 66,
+      maxWidth: contentWidth,
+      x: padding,
+      y: y
+    });
+
+    if (data.subtitle) {
+      y += 10;
+      y = drawCanvasText(ctx, data.subtitle, {
+        color: "#647275",
+        dryRun: options.dryRun,
+        font: "400 28px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        lineHeight: 40,
+        maxWidth: contentWidth,
+        x: padding,
+        y: y
+      });
+    }
+
+    y += 30;
+    data.sections.forEach(function (section) {
+      var layout = layoutSummaryImageSection(ctx, section, contentWidth - 48);
+      if (!options.dryRun) {
+        ctx.fillStyle = "#ffffff";
+        fillRoundRect(ctx, padding, y, contentWidth, layout.height, 18);
+      }
+
+      var innerY = y + 26;
+      ctx.font = "700 34px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillStyle = "#2f6f73";
+      layout.titleLines.forEach(function (line) {
+        if (!options.dryRun) {
+          ctx.fillText(line, padding + 24, innerY + 34);
+        }
+        innerY += 44;
+      });
+
+      innerY += 8;
+      ctx.font = "400 28px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillStyle = "#223033";
+      layout.bodyLines.forEach(function (line) {
+        if (!options.dryRun) {
+          ctx.fillText(line, padding + 24, innerY + 28);
+        }
+        innerY += 38;
+      });
+
+      y += layout.height + 24;
+    });
+
+    return y + padding - 24;
+  }
+
+  function layoutSummaryImageSection(ctx, section, maxWidth) {
+    ctx.font = "700 34px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    var titleLines = wrapCanvasText(ctx, section.title, maxWidth);
+    var bodyLines = [];
+    ctx.font = "400 28px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    section.lines.forEach(function (line, index) {
+      if (index > 0) {
+        bodyLines.push("");
+      }
+      wrapCanvasText(ctx, line, maxWidth).forEach(function (wrappedLine) {
+        bodyLines.push(wrappedLine);
+      });
+    });
+
+    return {
+      bodyLines: bodyLines,
+      height: 26 + titleLines.length * 44 + 8 + bodyLines.length * 38 + 28,
+      titleLines: titleLines
+    };
+  }
+
+  function wrapCanvasText(ctx, text, maxWidth) {
+    var chars = String(text || "").split("");
+    var lines = [];
+    var line = "";
+
+    chars.forEach(function (char) {
+      if (char === "\n") {
+        lines.push(line);
+        line = "";
+        return;
+      }
+
+      var candidate = line + char;
+      if (line && ctx.measureText(candidate).width > maxWidth) {
+        lines.push(line);
+        line = char;
+      } else {
+        line = candidate;
+      }
+    });
+
+    lines.push(line);
+    return lines;
+  }
+
+  function fillRoundRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawCanvasText(ctx, text, options) {
+    ctx.font = options.font;
+    ctx.fillStyle = options.color;
+    var y = options.y;
+    wrapCanvasText(ctx, text, options.maxWidth).forEach(function (line) {
+      if (!options.dryRun) {
+        ctx.fillText(line, options.x, y + options.lineHeight * 0.8);
+      }
+      y += options.lineHeight;
+    });
+    return y;
+  }
+
   function download(content, filename, type) {
     var blob = new Blob([content], { type: type });
+    downloadBlob(blob, filename);
+  }
+
+  function downloadBlob(blob, filename) {
     var url = URL.createObjectURL(blob);
     var link = document.createElement("a");
     link.href = url;
@@ -1321,6 +1639,39 @@
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+  }
+
+  function canvasToBlob(canvas) {
+    return new Promise(function (resolve, reject) {
+      if (canvas.toBlob) {
+        canvas.toBlob(function (blob) {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Canvas export failed"));
+          }
+        }, "image/png");
+        return;
+      }
+
+      try {
+        resolve(dataUrlToBlob(canvas.toDataURL("image/png")));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    var parts = dataUrl.split(",");
+    var mimeMatch = parts[0].match(/:(.*?);/);
+    var mime = mimeMatch ? mimeMatch[1] : "image/png";
+    var binary = atob(parts[1]);
+    var bytes = new Uint8Array(binary.length);
+    for (var index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    return new Blob([bytes], { type: mime });
   }
 
   function showToast(message) {
@@ -1357,7 +1708,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=12").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=15").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }
