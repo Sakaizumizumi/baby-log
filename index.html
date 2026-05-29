@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="新生儿记录">
     <title>新生儿记录</title>
-    <link rel="manifest" href="manifest.webmanifest?v=11">
+    <link rel="manifest" href="manifest.webmanifest?v=12">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=11">
+    <link rel="stylesheet" href="styles.css?v=12">
   </head>
   <body>
     <div class="app-shell">
@@ -163,20 +163,6 @@
           </div>
         </section>
 
-        <section class="tool-panel" aria-labelledby="historyTitle">
-          <div class="section-header">
-            <h2 id="historyTitle">历史</h2>
-            <select id="historyFilter" aria-label="筛选记录">
-              <option value="all">全部</option>
-              <option value="feed">吃奶</option>
-              <option value="pee">小便</option>
-              <option value="poop">大便</option>
-              <option value="diaper">尿便</option>
-            </select>
-          </div>
-          <div class="history-list" id="historyList" aria-live="polite"></div>
-        </section>
-
         <section class="tool-panel" aria-labelledby="recentDailySummaryTitle">
           <div class="section-header">
             <h2 id="recentDailySummaryTitle">近五日总结</h2>
@@ -203,6 +189,20 @@
               <input id="importJson" type="file" accept="application/json,.json">
             </label>
           </div>
+        </section>
+
+        <section class="tool-panel" aria-labelledby="historyTitle">
+          <div class="section-header">
+            <h2 id="historyTitle">历史</h2>
+            <select id="historyFilter" aria-label="筛选记录">
+              <option value="all">全部</option>
+              <option value="feed">吃奶</option>
+              <option value="pee">小便</option>
+              <option value="poop">大便</option>
+              <option value="diaper">尿便</option>
+            </select>
+          </div>
+          <div class="history-list" id="historyList" aria-live="polite"></div>
         </section>
       </main>
     </div>
@@ -318,6 +318,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=11" defer></script>
+    <script src="app.js?v=12" defer></script>
   </body>
 </html>
