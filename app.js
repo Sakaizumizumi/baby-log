@@ -86,6 +86,7 @@
     els.saveRecord = byId("saveRecord");
     els.clearRecordSelection = byId("clearRecordSelection");
     els.nowButton = byId("nowButton");
+    els.historyDateFilter = byId("historyDateFilter");
     els.historyFilter = byId("historyFilter");
     els.historyList = byId("historyList");
     els.exportRecentSummaryImage = byId("exportRecentSummaryImage");
@@ -139,6 +140,7 @@
       els.recordTime.value = nowShanghaiLocalInput();
     });
 
+    els.historyDateFilter.addEventListener("change", renderHistory);
     els.historyFilter.addEventListener("change", renderHistory);
     els.exportRecentSummaryImage.addEventListener("click", exportRecentSummaryImage);
     els.exportCsv.addEventListener("click", exportCsv);
@@ -359,9 +361,11 @@
 
   function renderHistory() {
     var filter = els.historyFilter.value;
+    var dateFilter = els.historyDateFilter.value;
+    dateFilter = renderHistoryDateOptions(dateFilter);
     var records = state.records
       .filter(function (record) {
-        return matchesFilter(record, filter);
+        return (dateFilter === "all" || dateKeyFromIso(record.time) === dateFilter) && matchesFilter(record, filter);
       })
       .slice()
       .sort(function (a, b) {
@@ -381,6 +385,23 @@
         group.records.map(renderRecord).join("") +
         "</section>";
     }).join("");
+  }
+
+  function renderHistoryDateOptions(selectedDate) {
+    var groups = groupByDate(
+      state.records.slice().sort(function (a, b) {
+        return new Date(b.time).getTime() - new Date(a.time).getTime();
+      })
+    );
+    var hasSelectedDate = selectedDate === "all" || groups.some(function (group) {
+      return group.dateKey === selectedDate;
+    });
+    var nextSelectedDate = hasSelectedDate ? selectedDate : "all";
+    els.historyDateFilter.innerHTML = '<option value="all">全部日期</option>' + groups.map(function (group) {
+      return '<option value="' + escapeHtml(group.dateKey) + '">' + escapeHtml(group.title) + "</option>";
+    }).join("");
+    els.historyDateFilter.value = nextSelectedDate;
+    return nextSelectedDate;
   }
 
   function renderRecentDailySummary() {
@@ -732,8 +753,10 @@
 
     return '<article class="record-item">' +
       '<div class="record-main">' +
+      '<div class="record-heading">' +
       '<div class="record-title">' + escapeHtml(recordLabel(record)) + "</div>" +
       '<div class="record-time">' + escapeHtml(formatDateTime(record.time)) + "</div>" +
+      "</div>" +
       (chips ? '<div class="chip-list">' + chips + "</div>" : "") +
       note +
       "</div>" +
@@ -1215,6 +1238,9 @@
     }
     if (filter === "poop") {
       return hasDiaperKind(record, "poop") || hasDiaperKind(record, "mixed");
+    }
+    if (filter === "mixed") {
+      return hasDiaperKind(record, "mixed");
     }
     return false;
   }
@@ -1708,7 +1734,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=15").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=20").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }

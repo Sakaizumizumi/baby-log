@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="新生儿记录">
     <title>新生儿记录</title>
-    <link rel="manifest" href="manifest.webmanifest?v=15">
+    <link rel="manifest" href="manifest.webmanifest?v=20">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=15">
+    <link rel="stylesheet" href="styles.css?v=20">
   </head>
   <body>
     <div class="app-shell">
@@ -195,13 +195,19 @@
         <section class="tool-panel" aria-labelledby="historyTitle">
           <div class="section-header">
             <h2 id="historyTitle">历史</h2>
-            <select id="historyFilter" aria-label="筛选记录">
-              <option value="all">全部</option>
-              <option value="feed">吃奶</option>
-              <option value="pee">小便</option>
-              <option value="poop">大便</option>
-              <option value="diaper">尿便</option>
-            </select>
+            <div class="history-filters">
+              <select id="historyDateFilter" aria-label="按日期筛选">
+                <option value="all">全部日期</option>
+              </select>
+              <select id="historyFilter" aria-label="按种类筛选">
+                <option value="all">全部种类</option>
+                <option value="feed">吃奶</option>
+                <option value="pee">小便</option>
+                <option value="poop">大便</option>
+                <option value="mixed">尿+便</option>
+                <option value="diaper">全部尿便</option>
+              </select>
+            </div>
           </div>
           <div class="history-list" id="historyList" aria-live="polite"></div>
         </section>
@@ -319,6 +325,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=15" defer></script>
+    <script src="app.js?v=20" defer></script>
   </body>
 </html>
