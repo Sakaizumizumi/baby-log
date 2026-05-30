@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="照片记录">
     <title>新生儿照片记录</title>
-    <link rel="manifest" href="manifest.webmanifest?v=21">
+    <link rel="manifest" href="manifest.webmanifest?v=22">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=21">
-    <link rel="stylesheet" href="photos.css?v=21">
+    <link rel="stylesheet" href="styles.css?v=22">
+    <link rel="stylesheet" href="photos.css?v=22">
   </head>
   <body>
     <div class="app-shell photo-app">
@@ -51,10 +51,16 @@
           <div class="photo-upload-grid">
             <div class="photo-upload-block">
               <h3>大便照片</h3>
-              <label class="secondary-button file-button photo-file-button">
-                拍/选并保存
-                <input id="poopPhotoInput" type="file" accept="image/*" capture="environment">
-              </label>
+              <div class="photo-upload-actions">
+                <label class="secondary-button file-button photo-file-button">
+                  拍照保存
+                  <input id="poopPhotoInput" type="file" accept="image/*" capture="environment">
+                </label>
+                <label class="secondary-button file-button photo-file-button">
+                  从相册选择
+                  <input id="poopGalleryInput" type="file" accept="image/*">
+                </label>
+              </div>
               <label class="field">
                 <span>备注</span>
                 <textarea id="poopNote" rows="2" placeholder="可选"></textarea>
@@ -63,10 +69,16 @@
 
             <div class="photo-upload-block">
               <h3>肚脐照片</h3>
-              <label class="secondary-button file-button photo-file-button">
-                拍/选并保存
-                <input id="navelPhotoInput" type="file" accept="image/*" capture="environment">
-              </label>
+              <div class="photo-upload-actions">
+                <label class="secondary-button file-button photo-file-button">
+                  拍照保存
+                  <input id="navelPhotoInput" type="file" accept="image/*" capture="environment">
+                </label>
+                <label class="secondary-button file-button photo-file-button">
+                  从相册选择
+                  <input id="navelGalleryInput" type="file" accept="image/*">
+                </label>
+              </div>
               <label class="field">
                 <span>备注</span>
                 <textarea id="navelNote" rows="2" placeholder="可选"></textarea>
@@ -101,6 +113,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="photos.js?v=21" defer></script>
+    <script src="photos.js?v=22" defer></script>
   </body>
 </html>

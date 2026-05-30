@@ -41,7 +41,9 @@
     els.photoTotal = byId("photoTotal");
     els.photoCounts = byId("photoCounts");
     els.poopPhotoInput = byId("poopPhotoInput");
+    els.poopGalleryInput = byId("poopGalleryInput");
     els.navelPhotoInput = byId("navelPhotoInput");
+    els.navelGalleryInput = byId("navelGalleryInput");
     els.poopNote = byId("poopNote");
     els.navelNote = byId("navelNote");
     els.refreshPhotos = byId("refreshPhotos");
@@ -56,13 +58,10 @@
   }
 
   function bindEvents() {
-    els.poopPhotoInput.addEventListener("change", function () {
-      saveSelectedPhoto("poop", els.poopPhotoInput, els.poopNote);
-    });
-
-    els.navelPhotoInput.addEventListener("change", function () {
-      saveSelectedPhoto("navel", els.navelPhotoInput, els.navelNote);
-    });
+    bindPhotoInput(els.poopPhotoInput, "poop", els.poopNote);
+    bindPhotoInput(els.poopGalleryInput, "poop", els.poopNote);
+    bindPhotoInput(els.navelPhotoInput, "navel", els.navelNote);
+    bindPhotoInput(els.navelGalleryInput, "navel", els.navelNote);
 
     els.refreshPhotos.addEventListener("click", loadAndRender);
     els.photoFilter.addEventListener("change", render);
@@ -84,6 +83,12 @@
 
     els.closePhotoDialog.addEventListener("click", closePhotoDialog);
     els.photoDialog.addEventListener("close", clearDialogImage);
+  }
+
+  function bindPhotoInput(input, type, noteEl) {
+    input.addEventListener("change", function () {
+      saveSelectedPhoto(type, input, noteEl);
+    });
   }
 
   function loadAndRender() {
@@ -628,7 +633,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=21").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=22").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }

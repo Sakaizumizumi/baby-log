@@ -1734,7 +1734,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=21").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=22").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }

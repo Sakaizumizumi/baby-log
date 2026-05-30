@@ -1,4 +1,4 @@
-var CACHE_NAME = "baby-log-pwa-v21";
+var CACHE_NAME = "baby-log-pwa-v22";
 var CORE_ASSETS = [
   "./",
   "./index.html",
