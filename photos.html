@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#2f6f73">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="照片记录">
+    <title>新生儿照片记录</title>
+    <link rel="manifest" href="manifest.webmanifest?v=21">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+    <link rel="stylesheet" href="styles.css?v=21">
+    <link rel="stylesheet" href="photos.css?v=21">
+  </head>
+  <body>
+    <div class="app-shell photo-app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">新生儿照片记录</p>
+          <h1>照片</h1>
+        </div>
+        <a class="status-pill photo-link" href="index.html">吃奶记录</a>
+      </header>
+
+      <main>
+        <section class="summary-grid" aria-label="照片概览">
+          <article class="metric">
+            <span>上次大便照片</span>
+            <strong id="lastPoopPhoto">--</strong>
+            <small id="lastPoopPhotoGap">--</small>
+          </article>
+          <article class="metric">
+            <span>上次肚脐照片</span>
+            <strong id="lastNavelPhoto">--</strong>
+            <small id="lastNavelPhotoGap">--</small>
+          </article>
+          <article class="metric accent">
+            <span>照片总数</span>
+            <strong id="photoTotal">0</strong>
+            <small id="photoCounts">大便 0 · 肚脐 0</small>
+          </article>
+        </section>
+
+        <section class="tool-panel" aria-labelledby="uploadTitle">
+          <div class="section-header">
+            <h2 id="uploadTitle">上传</h2>
+            <button class="ghost-button compact-button" type="button" id="refreshPhotos">刷新</button>
+          </div>
+
+          <div class="photo-upload-grid">
+            <div class="photo-upload-block">
+              <h3>大便照片</h3>
+              <label class="secondary-button file-button photo-file-button">
+                拍/选并保存
+                <input id="poopPhotoInput" type="file" accept="image/*" capture="environment">
+              </label>
+              <label class="field">
+                <span>备注</span>
+                <textarea id="poopNote" rows="2" placeholder="可选"></textarea>
+              </label>
+            </div>
+
+            <div class="photo-upload-block">
+              <h3>肚脐照片</h3>
+              <label class="secondary-button file-button photo-file-button">
+                拍/选并保存
+                <input id="navelPhotoInput" type="file" accept="image/*" capture="environment">
+              </label>
+              <label class="field">
+                <span>备注</span>
+                <textarea id="navelNote" rows="2" placeholder="可选"></textarea>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="tool-panel" aria-labelledby="photoHistoryTitle">
+          <div class="section-header">
+            <h2 id="photoHistoryTitle">历史照片</h2>
+            <select class="photo-filter" id="photoFilter" aria-label="按种类筛选">
+              <option value="all">全部</option>
+              <option value="poop">大便</option>
+              <option value="navel">肚脐</option>
+            </select>
+          </div>
+          <div class="photo-list" id="photoList" aria-live="polite"></div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="photo-dialog" id="photoDialog">
+      <div class="photo-dialog-header">
+        <div>
+          <h2 id="photoDialogTitle">照片</h2>
+          <p id="photoDialogMeta"></p>
+        </div>
+        <button class="icon-button" type="button" id="closePhotoDialog" aria-label="关闭">×</button>
+      </div>
+      <img id="photoDialogImage" alt="">
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="photos.js?v=21" defer></script>
+  </body>
+</html>

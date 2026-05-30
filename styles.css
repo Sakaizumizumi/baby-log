@@ -112,6 +112,18 @@ h3 {
   white-space: nowrap;
 }
 
+.topbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.nav-pill {
+  text-decoration: none;
+}
+
 main {
   display: grid;
   gap: 14px;

@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="新生儿记录">
     <title>新生儿记录</title>
-    <link rel="manifest" href="manifest.webmanifest?v=20">
+    <link rel="manifest" href="manifest.webmanifest?v=21">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=20">
+    <link rel="stylesheet" href="styles.css?v=21">
   </head>
   <body>
     <div class="app-shell">
@@ -19,7 +19,10 @@
           <p class="eyebrow">新生儿记录</p>
           <h1>今天</h1>
         </div>
-        <div class="status-pill" id="storageStatus">本机保存</div>
+        <div class="topbar-actions">
+          <a class="status-pill nav-pill" href="photos.html">照片记录</a>
+          <div class="status-pill" id="storageStatus">本机保存</div>
+        </div>
       </header>
 
       <main>
@@ -325,6 +328,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=20" defer></script>
+    <script src="app.js?v=21" defer></script>
   </body>
 </html>
