@@ -319,6 +319,9 @@
       return dateKeyFromIso(record.time) === today;
     });
     var todayFeeds = todayRecords.filter(isFeed);
+    var todayFeedSessions = buildFeedSessions(state.records.filter(isFeed)).filter(function (session) {
+      return dateKeyFromIso(session.time) === today;
+    });
     var todayDiapers = todayRecords.filter(isDiaper);
     var milkMl = todayFeeds.reduce(function (sum, record) {
       return sum + (Number(record.feed && record.feed.amountMl) || 0);
@@ -345,7 +348,7 @@
     );
 
     els.todayMilk.textContent = formatAmount(milkMl);
-    els.todayCounts.textContent = todayFeeds.length + " 次吃奶 · " + todayDiapers.length + " 次尿便";
+    els.todayCounts.textContent = todayFeedSessions.length + " 次喂奶 · " + todayDiapers.length + " 次尿便";
   }
 
   function fillLast(record, valueEl, gapEl) {
@@ -420,11 +423,15 @@
   }
 
   function renderRecentDailySummaryCard(group) {
-    var stats = getDailyStats(group.records);
+    var stats = getDailyStats(group.records, group.dateKey);
     var lines = [
       {
         label: "喂奶",
-        value: stats.feeds.length + " 次 · 平均间隔 " + averageIntervalText(stats.feeds)
+        value: stats.feedSessions.length + " 次 · 平均间隔 " + averageIntervalText(stats.feedSessions)
+      },
+      {
+        label: "吃奶记录",
+        value: stats.feedRecords.length + " 条"
       },
       {
         label: "母乳",
@@ -473,22 +480,23 @@
   }
 
   function renderDailySummaryGroup(group) {
-    var stats = getDailyStats(group.records);
+    var stats = getDailyStats(group.records, group.dateKey);
 
     return '<section class="daily-summary-card">' +
       '<div class="daily-summary-head">' +
       '<h3>' + escapeHtml(group.title) + "</h3>" +
       '<button class="secondary-button compact-button" type="button" data-summary-date="' + escapeHtml(group.dateKey) + '">导出图片</button>' +
-      '<span>' + stats.feeds.length + ' 次喂奶 · ' + stats.peeRecords.length + ' 次小便 · ' + stats.poopRecords.length + ' 次大便</span>' +
+      '<span>' + stats.feedSessions.length + ' 次喂奶 · ' + stats.peeRecords.length + ' 次小便 · ' + stats.poopRecords.length + ' 次大便</span>' +
       "</div>" +
       '<div class="daily-summary-grid">' +
       renderSummaryBlock(
         "喂奶",
         [
+          "包含吃奶记录：" + stats.feedRecords.length + " 条",
           "其他总奶量：" + formatAmount(stats.otherMilkMl),
           "母乳持续：" + breastDurationText(stats.breastTotals)
         ],
-        renderTimeline(stats.feeds, "暂无喂奶记录", feedTimelineLabel)
+        renderTimeline(stats.feedSessions, "暂无喂奶记录", feedSessionTimelineLabel)
       ) +
       renderSummaryBlock(
         "小便",
@@ -504,11 +512,15 @@
       "</section>";
   }
 
-  function getDailyStats(records) {
+  function getDailyStats(records, dateKey) {
     var sortedRecords = records.slice().sort(function (a, b) {
       return new Date(a.time).getTime() - new Date(b.time).getTime();
     });
     var feeds = sortedRecords.filter(isFeed);
+    var feedSessionSource = dateKey ? state.records.filter(isFeed) : feeds;
+    var feedSessions = buildFeedSessions(feedSessionSource).filter(function (session) {
+      return !dateKey || dateKeyFromIso(session.time) === dateKey;
+    });
     var peeRecords = sortedRecords.filter(function (record) {
       return hasDiaperKind(record, "pee") || hasDiaperKind(record, "mixed");
     });
@@ -523,7 +535,8 @@
 
     return {
       records: sortedRecords,
-      feeds: feeds,
+      feedRecords: feeds,
+      feedSessions: feedSessions,
       peeRecords: peeRecords,
       poopRecords: poopRecords,
       otherMilkMl: otherMilkMl,
@@ -585,7 +598,7 @@
       title: "近五日总结",
       subtitle: "生成时间：" + dateKeyFromIso(nowIso) + " " + formatTime(nowIso),
       sections: groups.map(function (group) {
-        var stats = getDailyStats(group.records);
+        var stats = getDailyStats(group.records, group.dateKey);
         return {
           title: group.title + " · " + formatDateRange(stats.records),
           lines: summaryOverviewLines(stats)
@@ -595,7 +608,7 @@
   }
 
   function buildDailySummaryImageData(group) {
-    var stats = getDailyStats(group.records);
+    var stats = getDailyStats(group.records, group.dateKey);
     return {
       title: "每日总结 · " + group.title,
       subtitle: "记录范围：" + formatDateRange(stats.records),
@@ -606,7 +619,7 @@
         },
         {
           title: "喂奶时间线",
-          lines: summaryTimelineLines(stats.feeds, "暂无喂奶记录", feedTimelineLabel)
+          lines: summaryTimelineLines(stats.feedSessions, "暂无喂奶记录", feedSessionTimelineLabel)
         },
         {
           title: "小便时间线",
@@ -622,7 +635,8 @@
 
   function summaryOverviewLines(stats) {
     return [
-      "喂奶：" + stats.feeds.length + " 次 · 平均间隔 " + averageIntervalText(stats.feeds),
+      "喂奶：" + stats.feedSessions.length + " 次 · 平均间隔 " + averageIntervalText(stats.feedSessions),
+      "吃奶记录：" + stats.feedRecords.length + " 条",
       "母乳：" + breastDurationText(stats.breastTotals),
       "其他奶量：" + formatAmount(stats.otherMilkMl),
       "小便：" + stats.peeRecords.length + " 次 · 平均间隔 " + averageIntervalText(stats.peeRecords),
@@ -666,6 +680,60 @@
         '<small>间隔 ' + escapeHtml(interval) + "</small>" +
         "</div>";
     }).join("") + "</div>";
+  }
+
+  function buildFeedSessions(feedRecords) {
+    return feedRecords.slice()
+      .sort(function (a, b) {
+        return new Date(a.time).getTime() - new Date(b.time).getTime();
+      })
+      .reduce(function (sessions, record) {
+        var latestSession = sessions[sessions.length - 1];
+        if (!latestSession || intervalMinutes(latestSession.lastTime, record.time) >= 60) {
+          sessions.push({
+            records: [record],
+            time: record.time,
+            lastTime: record.time
+          });
+          return sessions;
+        }
+
+        latestSession.records.push(record);
+        latestSession.lastTime = record.time;
+        return sessions;
+      }, []);
+  }
+
+  function feedSessionTimelineLabel(session) {
+    var parts = [];
+    var breastTotals = summarizeBreastDurations(session.records);
+    var hasBreast = session.records.some(function (record) {
+      return normalizeFeedMethod(record.feed && record.feed.method) === "breast";
+    });
+    var hasActiveBreast = session.records.some(isActiveBreastfeed);
+    var otherMilkMl = session.records.reduce(function (sum, record) {
+      return normalizeFeedMethod(record.feed && record.feed.method) === "breast" ?
+        sum :
+        sum + (Number(record.feed && record.feed.amountMl) || 0);
+    }, 0);
+    var otherCount = session.records.filter(function (record) {
+      return normalizeFeedMethod(record.feed && record.feed.method) !== "breast";
+    }).length;
+
+    if (hasBreast) {
+      parts.push("母乳 " + breastDurationText(breastTotals));
+    }
+    if (hasActiveBreast) {
+      parts.push("进行中");
+    }
+    if (otherCount) {
+      parts.push("其他 " + formatAmount(otherMilkMl));
+    }
+    if (session.records.length > 1) {
+      parts.push("含 " + session.records.length + " 条记录");
+    }
+
+    return parts.length ? parts.join(" · ") : "喂奶";
   }
 
   function feedTimelineLabel(record) {
@@ -1413,9 +1481,12 @@
     return number + " ml";
   }
 
+  function intervalMinutes(previousIso, currentIso) {
+    return Math.max(0, Math.round((new Date(currentIso).getTime() - new Date(previousIso).getTime()) / 60000));
+  }
+
   function formatInterval(previousIso, currentIso) {
-    var minutes = Math.max(0, Math.round((new Date(currentIso).getTime() - new Date(previousIso).getTime()) / 60000));
-    return formatMinuteCount(minutes);
+    return formatMinuteCount(intervalMinutes(previousIso, currentIso));
   }
 
   function averageIntervalText(records) {
@@ -1424,7 +1495,7 @@
     }
     var totalMinutes = 0;
     for (var index = 1; index < records.length; index += 1) {
-      totalMinutes += Math.max(0, Math.round((new Date(records[index].time).getTime() - new Date(records[index - 1].time).getTime()) / 60000));
+      totalMinutes += intervalMinutes(records[index - 1].time, records[index].time);
     }
     return formatMinuteCount(Math.round(totalMinutes / (records.length - 1)));
   }
@@ -1734,7 +1805,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=22").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=27").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }

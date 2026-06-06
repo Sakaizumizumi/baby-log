@@ -633,7 +633,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=22").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=27").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }
