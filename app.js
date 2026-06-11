@@ -91,6 +91,7 @@
     els.historyList = byId("historyList");
     els.exportRecentSummaryImage = byId("exportRecentSummaryImage");
     els.recentDailySummaryList = byId("recentDailySummaryList");
+    els.dailySummaryDateSelect = byId("dailySummaryDateSelect");
     els.dailySummaryList = byId("dailySummaryList");
     els.lastFeed = byId("lastFeed");
     els.lastFeedGap = byId("lastFeedGap");
@@ -142,6 +143,7 @@
 
     els.historyDateFilter.addEventListener("change", renderHistory);
     els.historyFilter.addEventListener("change", renderHistory);
+    els.dailySummaryDateSelect.addEventListener("change", renderDailySummary);
     els.exportRecentSummaryImage.addEventListener("click", exportRecentSummaryImage);
     els.exportCsv.addEventListener("click", exportCsv);
     els.exportJson.addEventListener("click", exportJson);
@@ -380,13 +382,19 @@
       return;
     }
 
+    var today = dateKeyFromIso(new Date().toISOString());
     var groups = groupByDate(records);
     els.historyList.innerHTML = groups.map(function (group) {
-      return '<section class="date-group"><div class="date-title">' +
-        escapeHtml(group.title) +
-        '</div>' +
+      var shouldOpen = group.dateKey === today || dateFilter !== "all";
+      return '<details class="date-group"' + (shouldOpen ? " open" : "") + ">" +
+        '<summary class="date-title">' +
+        '<span>' + escapeHtml(group.title) + "</span>" +
+        '<small>' + group.records.length + " 条</small>" +
+        "</summary>" +
+        '<div class="date-records">' +
         group.records.map(renderRecord).join("") +
-        "</section>";
+        "</div>" +
+        "</details>";
     }).join("");
   }
 
@@ -472,11 +480,43 @@
     );
 
     if (!groups.length) {
+      renderDailySummaryDateOptions([], "");
       els.dailySummaryList.innerHTML = '<div class="empty-state">暂无总结</div>';
       return;
     }
 
-    els.dailySummaryList.innerHTML = groups.map(renderDailySummaryGroup).join("");
+    var recentGroups = groups.slice(0, 3);
+    var selectedDate = renderDailySummaryDateOptions(groups, els.dailySummaryDateSelect.value);
+    var selectedGroup = groups.find(function (group) {
+      return group.dateKey === selectedDate;
+    });
+    var displayGroups = recentGroups.slice();
+
+    if (selectedGroup && !recentGroups.some(function (group) {
+      return group.dateKey === selectedGroup.dateKey;
+    })) {
+      displayGroups.push(selectedGroup);
+    }
+
+    els.dailySummaryList.innerHTML = displayGroups.map(renderDailySummaryGroup).join("");
+  }
+
+  function renderDailySummaryDateOptions(groups, selectedDate) {
+    var olderGroups = groups.slice(3);
+    var hasSelectedDate = olderGroups.some(function (group) {
+      return group.dateKey === selectedDate;
+    });
+    var nextSelectedDate = hasSelectedDate ? selectedDate : "";
+    var placeholder = olderGroups.length ? "选择更早日期" : "暂无更早日期";
+
+    els.dailySummaryDateSelect.innerHTML =
+      '<option value="">' + escapeHtml(placeholder) + "</option>" +
+      olderGroups.map(function (group) {
+        return '<option value="' + escapeHtml(group.dateKey) + '">' + escapeHtml(group.title) + "</option>";
+      }).join("");
+    els.dailySummaryDateSelect.value = nextSelectedDate;
+    els.dailySummaryDateSelect.disabled = !olderGroups.length;
+    return nextSelectedDate;
   }
 
   function renderDailySummaryGroup(group) {
@@ -1805,7 +1845,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=27").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=29").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }

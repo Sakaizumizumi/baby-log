@@ -339,6 +339,24 @@ textarea:focus {
   gap: 12px;
 }
 
+.summary-date-picker {
+  display: grid;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.summary-date-picker span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.summary-date-picker select {
+  min-height: 38px;
+  padding: 0 10px;
+  font-size: 0.86rem;
+}
+
 .recent-daily-list {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -357,9 +375,53 @@ textarea:focus {
 }
 
 .date-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   color: var(--muted);
   font-size: 0.84rem;
   font-weight: 800;
+}
+
+summary.date-title {
+  cursor: pointer;
+  list-style: none;
+}
+
+summary.date-title::-webkit-details-marker {
+  display: none;
+}
+
+summary.date-title::before {
+  content: "›";
+  flex: 0 0 auto;
+  color: var(--teal-dark);
+  font-size: 1rem;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 140ms ease;
+}
+
+.date-group[open] > summary.date-title::before {
+  transform: rotate(90deg);
+}
+
+.date-title span {
+  min-width: 0;
+  flex: 1;
+}
+
+.date-title small {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.date-records {
+  display: grid;
+  gap: 6px;
 }
 
 .recent-day-card {
@@ -720,6 +782,15 @@ textarea:focus {
 
   .record-actions {
     grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  }
+
+  .section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .summary-date-picker {
+    min-width: 0;
   }
 }
 
