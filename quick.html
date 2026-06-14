@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#2f6f73">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="快速记录">
+    <title>新生儿快速记录</title>
+    <link rel="manifest" href="manifest.webmanifest?v=32">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+    <link rel="stylesheet" href="styles.css?v=32">
+  </head>
+  <body>
+    <div class="app-shell quick-app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">新生儿记录</p>
+          <h1>快速记录</h1>
+        </div>
+        <div class="topbar-actions">
+          <a class="status-pill nav-pill" href="index.html">完整记录</a>
+          <a class="status-pill nav-pill" href="analysis.html">规律分析</a>
+          <a class="status-pill nav-pill" href="photos.html">照片记录</a>
+          <div class="status-pill" id="storageStatus">本机保存</div>
+        </div>
+      </header>
+
+      <main>
+        <section class="summary-grid" aria-label="快速概览">
+          <article class="metric">
+            <span>上次吃奶</span>
+            <strong id="lastFeed">--</strong>
+            <small id="lastFeedGap">--</small>
+          </article>
+          <article class="metric">
+            <span>上次小便</span>
+            <strong id="lastPee">--</strong>
+            <small id="lastPeeGap">--</small>
+          </article>
+          <article class="metric">
+            <span>上次大便</span>
+            <strong id="lastPoop">--</strong>
+            <small id="lastPoopGap">--</small>
+          </article>
+          <article class="metric accent">
+            <span>今日奶量</span>
+            <strong id="todayMilk">0 ml</strong>
+            <small id="todayCounts">0 次喂奶 · 0 次尿便</small>
+          </article>
+        </section>
+
+        <section class="tool-panel quick-record-panel" aria-labelledby="quickRecordTitle">
+          <div class="section-header">
+            <h2 id="quickRecordTitle">记录</h2>
+            <span class="quick-time-hint" id="quickTimeHint">点击即记录所选时间</span>
+          </div>
+
+          <div class="quick-time-tools">
+            <label class="field">
+              <span>时间</span>
+              <input id="recordTime" type="datetime-local" required>
+            </label>
+            <div class="quick-time-actions">
+              <button class="ghost-button" type="button" id="nowButton">现在</button>
+              <button class="secondary-button" type="button" id="undoLastRecord">撤回上个记录</button>
+            </div>
+          </div>
+
+          <div class="quick-record-groups" aria-label="快速记录选项">
+            <section class="quick-record-group" aria-labelledby="quickBreastTitle">
+              <h3 id="quickBreastTitle">母乳</h3>
+              <div class="quick-chip-grid">
+                <button class="quick-record-chip feed" type="button" data-quick="breast-10min">
+                  <strong>10分</strong>
+                  <span>亲喂</span>
+                </button>
+                <button class="quick-record-chip feed" type="button" data-quick="pumped-10">
+                  <strong>10ml</strong>
+                  <span>瓶喂母乳</span>
+                </button>
+                <button class="quick-record-chip feed" type="button" data-quick="pumped-30">
+                  <strong>30ml</strong>
+                  <span>瓶喂母乳</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="quick-record-group" aria-labelledby="quickFormulaTitle">
+              <h3 id="quickFormulaTitle">配方奶</h3>
+              <div class="quick-chip-grid">
+                <button class="quick-record-chip other-feed" type="button" data-quick="formula-30">
+                  <strong>30ml</strong>
+                  <span>配方奶</span>
+                </button>
+                <button class="quick-record-chip other-feed" type="button" data-quick="formula-50">
+                  <strong>50ml</strong>
+                  <span>配方奶</span>
+                </button>
+                <button class="quick-record-chip other-feed" type="button" data-quick="formula-80">
+                  <strong>80ml</strong>
+                  <span>配方奶</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="quick-record-group" aria-labelledby="quickPeeTitle">
+              <h3 id="quickPeeTitle">小便</h3>
+              <div class="quick-chip-grid">
+                <button class="quick-record-chip pee" type="button" data-quick="pee-plus">
+                  <strong>+</strong>
+                  <span>小便</span>
+                </button>
+                <button class="quick-record-chip pee" type="button" data-quick="pee-plus-plus">
+                  <strong>++</strong>
+                  <span>小便</span>
+                </button>
+                <button class="quick-record-chip pee" type="button" data-quick="pee-plus-plus-plus">
+                  <strong>+++</strong>
+                  <span>小便</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="quick-record-group" aria-labelledby="quickPoopTitle">
+              <h3 id="quickPoopTitle">大便</h3>
+              <div class="quick-chip-grid">
+                <button class="quick-record-chip poop" type="button" data-quick="poop-yellow-paste">
+                  <strong>黄色糊状+++</strong>
+                  <span>大便</span>
+                </button>
+                <button class="quick-record-chip poop" type="button" data-quick="poop-yellow-watery">
+                  <strong>黄色水样+++</strong>
+                  <span>大便</span>
+                </button>
+                <button class="quick-record-chip mixed" type="button" data-quick="mixed-poop">
+                  <strong>尿带屎</strong>
+                  <span>尿+便</span>
+                </button>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="quick.js?v=32" defer></script>
+  </body>
+</html>

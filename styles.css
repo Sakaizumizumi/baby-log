@@ -231,6 +231,100 @@ textarea:focus {
   margin-top: 14px;
 }
 
+.quick-record-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.quick-time-hint {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.quick-time-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.quick-time-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.quick-record-groups {
+  display: grid;
+  gap: 14px;
+}
+
+.quick-record-group {
+  display: grid;
+  gap: 8px;
+}
+
+.quick-record-group h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.quick-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-record-chip {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  min-height: 78px;
+  padding: 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  text-align: left;
+  box-shadow: none;
+}
+
+.quick-record-chip strong {
+  font-size: 1.12rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.quick-record-chip span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.quick-record-chip.feed {
+  border-color: rgba(47, 111, 115, 0.34);
+  background: #edf4f3;
+}
+
+.quick-record-chip.other-feed {
+  border-color: rgba(185, 137, 44, 0.36);
+  background: #fff9ec;
+}
+
+.quick-record-chip.pee {
+  border-color: rgba(86, 140, 92, 0.34);
+  background: #f0f7ef;
+}
+
+.quick-record-chip.poop,
+.quick-record-chip.mixed {
+  border-color: rgba(214, 107, 87, 0.34);
+  background: #fff4f1;
+}
+
 .quick-button,
 .primary-button,
 .secondary-button,
@@ -274,6 +368,7 @@ textarea:focus {
 }
 
 .quick-button:active,
+.quick-record-chip:active,
 .primary-button:active,
 .secondary-button:active,
 .ghost-button:active {
@@ -776,6 +871,22 @@ summary.date-title::before {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .quick-chip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-time-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-time-actions {
+    justify-content: stretch;
+  }
+
+  .quick-time-actions button {
+    flex: 1 1 130px;
+  }
+
   .record-item {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -787,6 +898,15 @@ summary.date-title::before {
   .section-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .quick-app .topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quick-app .topbar-actions {
+    justify-content: flex-start;
   }
 
   .summary-date-picker {
@@ -806,5 +926,15 @@ summary.date-title::before {
 
   .quick-actions {
     gap: 8px;
+  }
+
+  .quick-chip-grid {
+    gap: 8px;
+  }
+
+  .quick-record-chip {
+    min-height: 72px;
+    padding-right: 8px;
+    padding-left: 8px;
   }
 }
