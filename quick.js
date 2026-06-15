@@ -17,6 +17,28 @@
       pee: "小便",
       poop: "大便",
       mixed: "尿+便"
+    },
+    diaperAmount: {
+      "+": "+",
+      "++": "++",
+      "+++": "+++"
+    },
+    poopColor: {
+      yellow: "黄色",
+      green: "绿色",
+      brown: "棕色",
+      black: "黑色",
+      red: "红色",
+      white: "白色",
+      other: "其他"
+    },
+    poopTexture: {
+      loose: "稀",
+      paste: "糊状",
+      formed: "成形",
+      watery: "水样",
+      seedy: "颗粒",
+      other: "其他"
     }
   };
 
@@ -160,13 +182,14 @@
       }
     },
     "mixed-poop": {
-      label: "尿带屎",
+      label: "小便++大便+",
       record: function () {
         return {
           type: "diaper",
-          note: "尿带屎",
+          note: "小便++大便+",
           diaper: {
-            kind: "mixed"
+            kind: "mixed",
+            amount: "小便++大便+"
           }
         };
       }
@@ -202,6 +225,8 @@
     els.todayMilk = byId("todayMilk");
     els.todayCounts = byId("todayCounts");
     els.quickTimeHint = byId("quickTimeHint");
+    els.quickTodayDate = byId("quickTodayDate");
+    els.quickTodaySummary = byId("quickTodaySummary");
     els.toast = byId("toast");
   }
 
@@ -272,11 +297,110 @@
 
   function render() {
     renderSummary();
+    renderTodaySummary();
     if (els.quickTimeHint) {
       var timeIso = isoFromShanghaiInput(els.recordTime.value);
       els.quickTimeHint.textContent = timeIso ?
         "点击即记录所选时间 · " + formatTime(timeIso) :
         "请先选择记录时间";
+    }
+  }
+
+  function renderTodaySummary() {
+    var today = dateKeyFromIso(new Date().toISOString());
+    var todayRecords = state.records.filter(function (record) {
+      return dateKeyFromIso(record.time) === today;
+    });
+    var sortedEvents = todayRecords.slice().sort(function (a, b) {
+      return new Date(b.time).getTime() - new Date(a.time).getTime();
+    });
+    var feeds = todayRecords.filter(isFeed);
+    var feedSessions = buildFeedSessions(state.records.filter(isFeed)).filter(function (session) {
+      return dateKeyFromIso(session.time) === today;
+    });
+    var peeRecords = todayRecords.filter(function (record) {
+      return hasDiaperKind(record, "pee") || hasDiaperKind(record, "mixed");
+    });
+    var poopRecords = todayRecords.filter(function (record) {
+      return hasDiaperKind(record, "poop") || hasDiaperKind(record, "mixed");
+    });
+    var milkMl = feeds.reduce(function (sum, record) {
+      return sum + (Number(record.feed && record.feed.amountMl) || 0);
+    }, 0);
+    var breastMinutes = feeds.reduce(function (sum, record) {
+      var feed = record.feed || {};
+      return normalizeFeedMethod(feed.method) === "breast" ?
+        sum + (Number(feed.durationMin) || 0) :
+        sum;
+    }, 0);
+
+    els.quickTodayDate.textContent = "今天 · " + today;
+
+    if (!todayRecords.length) {
+      els.quickTodaySummary.innerHTML = '<div class="empty-state">今天暂无记录</div>';
+      return;
+    }
+
+    els.quickTodaySummary.innerHTML =
+      '<div class="quick-today-stats">' +
+      renderTodayStat("喂奶", feedSessions.length + " 次") +
+      renderTodayStat("吃奶记录", feeds.length + " 条") +
+      renderTodayStat("奶量", formatAmount(milkMl)) +
+      renderTodayStat("母乳", formatTotalMinutes(breastMinutes)) +
+      renderTodayStat("小便", peeRecords.length + " 次") +
+      renderTodayStat("大便", poopRecords.length + " 次") +
+      "</div>" +
+      '<div class="quick-event-list">' +
+      sortedEvents.map(renderTodayEvent).join("") +
+      "</div>";
+  }
+
+  function renderTodayStat(label, value) {
+    return '<article class="quick-today-stat">' +
+      '<span>' + escapeHtml(label) + "</span>" +
+      '<strong>' + escapeHtml(value) + "</strong>" +
+      "</article>";
+  }
+
+  function renderTodayEvent(record) {
+    var detail = recordDetailText(record);
+    return '<article class="quick-event-item">' +
+      '<time>' + escapeHtml(formatTime(record.time)) + "</time>" +
+      '<div>' +
+      '<strong>' + escapeHtml(recordLabel(record)) + "</strong>" +
+      (detail ? '<span>' + escapeHtml(detail) + "</span>" : "") +
+      "</div>" +
+      "</article>";
+  }
+
+  function recordDetailText(record) {
+    var parts = [];
+    if (record.feed) {
+      if (Number.isFinite(Number(record.feed.amountMl))) {
+        parts.push(formatAmount(Number(record.feed.amountMl)));
+      }
+      if (Number.isFinite(Number(record.feed.durationMin))) {
+        parts.push(record.feed.durationMin + " 分钟");
+      }
+      if (record.feed.endedAt) {
+        parts.push("结束 " + formatTime(record.feed.endedAt));
+      }
+    }
+    if (record.diaper) {
+      pushLabel(parts, "diaperAmount", record.diaper.amount);
+      pushLabel(parts, "poopColor", record.diaper.poopColor);
+      pushLabel(parts, "poopTexture", record.diaper.poopTexture);
+    }
+    if (record.note) {
+      parts.push(record.note);
+    }
+    return parts.join(" · ");
+  }
+
+  function pushLabel(parts, group, value) {
+    var text = labelFor(group, value);
+    if (text) {
+      parts.push(text);
     }
   }
 
@@ -442,6 +566,13 @@
     return labels.diaperKind[record.diaper && record.diaper.kind] || "尿便";
   }
 
+  function labelFor(group, value) {
+    if (!value) {
+      return "";
+    }
+    return (labels[group] && labels[group][value]) || value;
+  }
+
   function compareByTime(a, b) {
     return new Date(a.time).getTime() - new Date(b.time).getTime();
   }
@@ -530,6 +661,14 @@
     return hours + " 小时 " + rest + " 分钟";
   }
 
+  function formatTotalMinutes(minutes) {
+    var safeMinutes = Math.max(0, Number(minutes) || 0);
+    if (safeMinutes === 0) {
+      return "0 分钟";
+    }
+    return formatMinuteCount(safeMinutes);
+  }
+
   function addMinutes(iso, minutes) {
     return new Date(new Date(iso).getTime() + minutes * 60000).toISOString();
   }
@@ -540,6 +679,18 @@
 
   function byId(id) {
     return document.getElementById(id);
+  }
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char];
+    });
   }
 
   function showToast(message) {
@@ -556,7 +707,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=32").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=37").catch(function () {
       // The app still works without offline caching.
     });
   }
