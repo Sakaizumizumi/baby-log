@@ -5,337 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#2f6f73">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="新生儿记录">
-    <title>新生儿记录</title>
-    <link rel="manifest" href="manifest.webmanifest?v=37">
+    <meta name="apple-mobile-web-app-title" content="宝宝日记">
+    <title>宝宝日记</title>
+    <link rel="manifest" href="manifest.webmanifest?v=38">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=37">
+    <link rel="stylesheet" href="styles.css?v=38">
+    <link rel="stylesheet" href="diary.css?v=38">
+    <script src="diary.js?v=38" defer></script>
   </head>
   <body>
-    <div class="app-shell">
+    <div class="app-shell diary-app">
       <header class="topbar">
         <div>
-          <p class="eyebrow">新生儿记录</p>
-          <h1>今天</h1>
+          <p class="eyebrow">宝宝的每一天</p>
+          <h1>宝宝日记</h1>
         </div>
-        <div class="topbar-actions">
+        <nav class="topbar-actions" aria-label="页面导航">
+          <a class="status-pill nav-pill" href="index.html" aria-current="page">日记</a>
           <a class="status-pill nav-pill" href="quick.html">快速记录</a>
-          <a class="status-pill nav-pill" href="analysis.html">规律分析</a>
+          <a class="status-pill nav-pill" href="records.html">喂养记录</a>
           <a class="status-pill nav-pill" href="photos.html">照片记录</a>
-          <div class="status-pill" id="storageStatus">本机保存</div>
-        </div>
+        </nav>
       </header>
-
       <main>
-        <section class="summary-grid" aria-label="今日概览">
-          <article class="metric">
-            <span>上次吃奶</span>
-            <strong id="lastFeed">--</strong>
-            <small id="lastFeedGap">--</small>
-          </article>
-          <article class="metric">
-            <span>上次小便</span>
-            <strong id="lastPee">--</strong>
-            <small id="lastPeeGap">--</small>
-          </article>
-          <article class="metric">
-            <span>上次大便</span>
-            <strong id="lastPoop">--</strong>
-            <small id="lastPoopGap">--</small>
-          </article>
-          <article class="metric accent">
-            <span>今日奶量</span>
-            <strong id="todayMilk">0 ml</strong>
-            <small id="todayCounts">0 次吃奶 · 0 次尿便</small>
-          </article>
-        </section>
-
-        <section class="tool-panel" aria-labelledby="recordTitle">
-          <div class="section-header">
-            <h2 id="recordTitle">记录</h2>
-            <button class="ghost-button" type="button" id="nowButton">现在</button>
+        <section class="diary-composer" aria-labelledby="composerTitle">
+          <div class="diary-section-heading">
+            <h2 id="composerTitle">记一件小事</h2>
+            <span class="diary-subtle" id="todayLabel"></span>
           </div>
-
-          <div class="form-grid">
-            <label class="field">
-              <span>时间</span>
-              <input id="recordTime" type="datetime-local" required>
-            </label>
-          </div>
-
-          <div class="quick-actions" aria-label="选择记录类型">
-            <button class="quick-button feed" type="button" data-action="breast">母乳</button>
-            <button class="quick-button other-feed" type="button" data-action="otherFeed">其他</button>
-            <button class="quick-button pee" type="button" data-action="pee">小便</button>
-            <button class="quick-button poop" type="button" data-action="poop">大便</button>
-            <button class="quick-button mixed" type="button" data-action="mixed">尿+便</button>
-          </div>
-
-          <div class="selected-record-panel" id="recordDetails" hidden>
-            <div class="selected-record-header">
-              <h3 id="selectedRecordTitle">详情</h3>
-              <button class="ghost-button" type="button" id="clearRecordSelection">取消</button>
-            </div>
-            <div class="detail-stack">
-              <div class="detail-group" id="feedDetailGroup" hidden>
-                <h3>吃奶</h3>
-                <div class="form-grid">
-                  <label class="field" data-feed-other>
-                    <span>喂奶方式</span>
-                    <select id="otherFeedMethod">
-                      <option value="bottle">奶瓶</option>
-                      <option value="formula">配方奶</option>
-                      <option value="pumped">瓶喂母乳</option>
-                      <option value="other">其他</option>
-                    </select>
-                  </label>
-                  <label class="field" data-feed-other>
-                    <span>奶量 ml</span>
-                    <input id="amountMl" type="number" inputmode="decimal" min="0" step="1" placeholder="0">
-                  </label>
-                  <label class="field" data-feed-breast>
-                    <span>记录方式</span>
-                    <select id="breastMode">
-                      <option value="timer">开始计时</option>
-                      <option value="manual">补记时长</option>
-                    </select>
-                  </label>
-                  <label class="field" data-feed-breast>
-                    <span>左右侧</span>
-                    <select id="feedSide">
-                      <option value="">未填</option>
-                      <option value="left">左侧</option>
-                      <option value="right">右侧</option>
-                      <option value="both">两侧</option>
-                      <option value="none">不适用</option>
-                    </select>
-                  </label>
-                  <label class="field" data-breast-manual>
-                    <span>持续分钟</span>
-                    <input id="durationMin" type="number" inputmode="numeric" min="1" step="1" placeholder="例如 15">
-                  </label>
-                </div>
-              </div>
-
-              <div class="detail-group" id="diaperDetailGroup" hidden>
-                <h3>大小便</h3>
-                <div class="form-grid">
-                  <label class="field">
-                    <span>量</span>
-                    <select id="diaperAmount">
-                      <option value="">未填</option>
-                      <option value="+">+</option>
-                      <option value="++">++</option>
-                      <option value="+++">+++</option>
-                    </select>
-                  </label>
-                  <label class="field" data-poop-extra>
-                    <span>大便颜色</span>
-                    <select id="poopColor">
-                      <option value="">未填</option>
-                      <option value="yellow">黄色</option>
-                      <option value="green">绿色</option>
-                      <option value="brown">棕色</option>
-                      <option value="black">黑色</option>
-                      <option value="red">红色</option>
-                      <option value="white">白色</option>
-                      <option value="other">其他</option>
-                    </select>
-                  </label>
-                  <label class="field" data-poop-extra>
-                    <span>大便性状</span>
-                    <select id="poopTexture">
-                      <option value="">未填</option>
-                      <option value="loose">稀</option>
-                      <option value="paste">糊状</option>
-                      <option value="formed">成形</option>
-                      <option value="watery">水样</option>
-                      <option value="seedy">颗粒</option>
-                      <option value="other">其他</option>
-                    </select>
-                  </label>
-                </div>
-              </div>
-
+          <p class="diary-error" id="storageError" role="alert" hidden></p>
+          <form id="diaryForm">
+            <fieldset class="diary-fields" id="composerFields" disabled>
               <label class="field">
-                <span>备注</span>
-                <textarea id="note" rows="3" placeholder="可选"></textarea>
+                <span>日记内容</span>
+                <textarea id="entryText" rows="4" maxlength="10000" placeholder="今天，宝宝……" required></textarea>
               </label>
-
-              <button class="primary-button save-record-button" type="button" id="saveRecord">保存记录</button>
+              <div class="diary-time-row">
+                <label class="field">
+                  <span>时间</span>
+                  <input id="entryTime" type="datetime-local" required>
+                </label>
+                <button class="ghost-button" type="button" id="diaryNow">现在</button>
+              </div>
+              <div class="diary-attachment-toolbar">
+                <button class="secondary-button compact-button" id="chooseImages" type="button">添加图片</button>
+                <button class="ghost-button compact-button" id="takePhoto" type="button">拍照</button>
+                <span class="diary-subtle" id="attachmentCount"></span>
+                <input id="entryPhotos" type="file" accept="image/*" multiple hidden>
+                <input id="cameraPhoto" type="file" accept="image/*" capture="environment" hidden>
+              </div>
+              <div class="diary-attachments" id="attachmentPreview" aria-label="待保存图片"></div>
+              <div class="diary-submit-row">
+                <label class="diary-first-check">
+                  <input id="entryFirst" type="checkbox">
+                  <span>属于第一次</span>
+                </label>
+                <div class="diary-submit-actions">
+                  <button class="ghost-button" id="cancelEntryEdit" type="button" hidden>取消编辑</button>
+                  <button class="primary-button" id="saveEntry" type="submit">添加日记</button>
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </section>
+        <section class="diary-journal" aria-label="日记与第一次">
+          <div class="diary-journal-toolbar">
+            <div class="diary-tabs" role="tablist" aria-label="查看内容">
+              <button id="diaryTab" type="button" role="tab" aria-selected="true" aria-controls="diaryPanel" tabindex="0">日记 <span id="diaryCount">0</span></button>
+              <button id="firstsTab" type="button" role="tab" aria-selected="false" aria-controls="firstsPanel" tabindex="-1">第一次 <span id="firstsCount">0</span></button>
+            </div>
+            <label class="diary-date-filter">
+              <span class="diary-subtle">日期</span>
+              <input id="diaryDateFilter" type="date" aria-label="按日期查看日记">
+            </label>
+            <button class="ghost-button compact-button" id="clearDiaryFilter" type="button" hidden>全部日期</button>
+          </div>
+          <div id="diaryPanel" role="tabpanel" aria-labelledby="diaryTab" tabindex="0">
+            <div id="diaryList" class="diary-list" aria-live="polite">
+              <p class="empty-state">正在读取日记</p>
             </div>
           </div>
-        </section>
-
-        <section class="tool-panel" aria-labelledby="recentDailySummaryTitle">
-          <div class="section-header">
-            <h2 id="recentDailySummaryTitle">近五日总结</h2>
-            <button class="secondary-button compact-button" type="button" id="exportRecentSummaryImage">导出图片</button>
+          <div id="firstsPanel" role="tabpanel" aria-labelledby="firstsTab" tabindex="0" hidden>
+            <div id="firstsList" class="diary-list" aria-live="polite"></div>
           </div>
-          <div class="recent-daily-list" id="recentDailySummaryList" aria-live="polite"></div>
         </section>
-
-        <section class="tool-panel" aria-labelledby="dailySummaryTitle">
-          <div class="section-header">
-            <h2 id="dailySummaryTitle">每日总结</h2>
-            <label class="summary-date-picker">
-              <span>更早日期</span>
-              <select id="dailySummaryDateSelect">
-                <option value="">选择日期</option>
-              </select>
-            </label>
-          </div>
-          <div class="daily-summary-list" id="dailySummaryList" aria-live="polite"></div>
-        </section>
-
-        <section class="tool-panel" aria-labelledby="backupTitle">
-          <div class="section-header">
-            <h2 id="backupTitle">备份</h2>
-          </div>
+        <details class="diary-backup">
+          <summary>日记备份</summary>
           <div class="backup-actions">
-            <button class="secondary-button" type="button" id="exportCsv">导出 CSV</button>
-            <button class="secondary-button" type="button" id="exportJson">导出 JSON</button>
-            <label class="secondary-button file-button">
-              导入合并
-              <input id="importJson" type="file" accept="application/json,.json">
-            </label>
+            <button class="secondary-button" type="button" id="exportDiary" disabled>导出日记备份</button>
+            <button class="secondary-button" type="button" id="importDiaryButton" disabled>导入日记备份</button>
+            <input id="importDiary" type="file" accept="application/json,.json" hidden>
           </div>
-        </section>
-
-        <section class="tool-panel" aria-labelledby="historyTitle">
-          <div class="section-header">
-            <h2 id="historyTitle">历史</h2>
-            <div class="history-filters">
-              <select id="historyDateFilter" aria-label="按日期筛选">
-                <option value="all">全部日期</option>
-              </select>
-              <select id="historyFilter" aria-label="按种类筛选">
-                <option value="all">全部种类</option>
-                <option value="feed">吃奶</option>
-                <option value="pee">小便</option>
-                <option value="poop">大便</option>
-                <option value="mixed">尿+便</option>
-                <option value="diaper">全部尿便</option>
-              </select>
-            </div>
-          </div>
-          <div class="history-list" id="historyList" aria-live="polite"></div>
-        </section>
+        </details>
       </main>
     </div>
-
-    <dialog class="edit-dialog" id="editDialog">
-      <form id="editForm" method="dialog">
-        <div class="dialog-header">
-          <h2>编辑记录</h2>
-          <button class="icon-button" type="button" id="closeEdit" aria-label="关闭">×</button>
-        </div>
-        <input id="editId" type="hidden">
-
-        <div class="form-grid">
-          <label class="field">
-            <span>类型</span>
-            <select id="editType">
-              <option value="breast">母乳</option>
-              <option value="otherFeed">其他</option>
-              <option value="pee">小便</option>
-              <option value="poop">大便</option>
-              <option value="mixed">尿+便</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>时间</span>
-            <input id="editTime" type="datetime-local" required>
-          </label>
-        </div>
-
-        <div class="dialog-section" id="editFeedFields">
-          <h3>吃奶</h3>
-          <div class="form-grid">
-            <label class="field" data-edit-feed-other>
-              <span>喂奶方式</span>
-              <select id="editOtherFeedMethod">
-                <option value="bottle">奶瓶</option>
-                <option value="formula">配方奶</option>
-                <option value="pumped">瓶喂母乳</option>
-                <option value="other">其他</option>
-              </select>
-            </label>
-            <label class="field" data-edit-feed-other>
-              <span>奶量 ml</span>
-              <input id="editAmountMl" type="number" inputmode="decimal" min="0" step="1">
-            </label>
-            <label class="field" data-edit-feed-breast>
-              <span>左右侧</span>
-              <select id="editFeedSide">
-                <option value="">未填</option>
-                <option value="left">左侧</option>
-                <option value="right">右侧</option>
-                <option value="both">两侧</option>
-                <option value="none">不适用</option>
-              </select>
-            </label>
-            <label class="field" data-edit-feed-breast>
-              <span>持续分钟</span>
-              <input id="editDurationMin" type="number" inputmode="numeric" min="0" step="1">
-            </label>
-          </div>
-        </div>
-
-        <div class="dialog-section" id="editDiaperFields">
-          <h3>大小便</h3>
-          <div class="form-grid">
-            <label class="field">
-              <span>量</span>
-              <select id="editDiaperAmount">
-                <option value="">未填</option>
-                <option value="+">+</option>
-                <option value="++">++</option>
-                <option value="+++">+++</option>
-              </select>
-            </label>
-            <label class="field" data-edit-poop-extra>
-              <span>大便颜色</span>
-              <select id="editPoopColor">
-                <option value="">未填</option>
-                <option value="yellow">黄色</option>
-                <option value="green">绿色</option>
-                <option value="brown">棕色</option>
-                <option value="black">黑色</option>
-                <option value="red">红色</option>
-                <option value="white">白色</option>
-                <option value="other">其他</option>
-              </select>
-            </label>
-            <label class="field" data-edit-poop-extra>
-              <span>大便性状</span>
-              <select id="editPoopTexture">
-                <option value="">未填</option>
-                <option value="loose">稀</option>
-                <option value="paste">糊状</option>
-                <option value="formed">成形</option>
-                <option value="watery">水样</option>
-                <option value="seedy">颗粒</option>
-                <option value="other">其他</option>
-              </select>
-            </label>
-          </div>
-        </div>
-
-        <label class="field">
-          <span>备注</span>
-          <textarea id="editNote" rows="3"></textarea>
-        </label>
-
-        <menu class="dialog-actions">
-          <button class="ghost-button" type="button" id="cancelEdit">取消</button>
-          <button class="primary-button" type="submit">保存</button>
-        </menu>
-      </form>
+    <dialog class="diary-photo-dialog" id="diaryPhotoDialog" aria-labelledby="photoDialogTitle">
+      <div class="dialog-header">
+        <h2 id="photoDialogTitle">日记图片</h2>
+        <button class="icon-button" id="closeDiaryPhoto" type="button" aria-label="关闭图片" title="关闭图片">×</button>
+      </div>
+      <img id="diaryPhotoImage" alt="日记附图">
     </dialog>
-
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=37" defer></script>
   </body>
 </html>

@@ -84,8 +84,8 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-size: clamp(2rem, 12vw, 3.5rem);
-  line-height: 1;
+  font-size: 30px;
+  line-height: 1.2;
   white-space: nowrap;
 }
 

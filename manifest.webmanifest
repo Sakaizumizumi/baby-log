@@ -1,8 +1,8 @@
 {
-  "name": "新生儿记录",
+  "name": "宝宝日记与记录",
   "short_name": "宝宝记录",
-  "description": "手机端新生儿吃奶和大小便记录",
-  "start_url": "./quick.html",
+  "description": "宝宝日记、第一次、喂养和照片记录",
+  "start_url": "./index.html",
   "scope": ".",
   "display": "standalone",
   "background_color": "#f6f7f1",

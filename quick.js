@@ -707,7 +707,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=37").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=38").catch(function () {
       // The app still works without offline caching.
     });
   }
