@@ -1,4 +1,4 @@
-var CACHE_NAME = "baby-log-pwa-v38";
+var CACHE_NAME = "baby-log-pwa-v39";
 var CORE_ASSETS = [
   "./",
   "./index.html",
@@ -6,14 +6,20 @@ var CORE_ASSETS = [
   "./quick.html",
   "./photos.html",
   "./analysis.html",
-  "./styles.css?v=38",
-  "./diary.css?v=38",
-  "./photos.css?v=38",
-  "./diary.js?v=38",
-  "./quick.js?v=38",
-  "./app.js?v=38",
-  "./photos.js?v=38",
-  "./manifest.webmanifest?v=38",
+  "./styles.css?v=39",
+  "./diary.css?v=39",
+  "./photos.css?v=39",
+  "./diary.js?v=39",
+  "./photo-utils.js?v=39",
+  "./vendor/heic-to-1.5.2.js",
+  "./vendor/heic-to-LICENSE.txt",
+  "./vendor/libheif-COPYING.txt",
+  "./vendor/libde265-COPYING.txt",
+  "./vendor/GPL-3.0.txt",
+  "./quick.js?v=39",
+  "./app.js?v=39",
+  "./photos.js?v=39",
+  "./manifest.webmanifest?v=39",
   "./icons/icon.svg"
 ];
 

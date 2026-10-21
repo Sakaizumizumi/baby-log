@@ -2,6 +2,15 @@
   text-decoration: none;
 }
 
+.photo-upload-error {
+  padding: 10px 12px;
+  color: #8c3325;
+  background: #fff0ed;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
 .photo-app .summary-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

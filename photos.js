@@ -19,7 +19,8 @@
 
   var state = {
     photos: [],
-    objectUrls: []
+    objectUrls: [],
+    saving: false
   };
 
   var els = {};
@@ -47,6 +48,8 @@
     els.poopNote = byId("poopNote");
     els.navelNote = byId("navelNote");
     els.refreshPhotos = byId("refreshPhotos");
+    els.photoUploadError = byId("photoUploadError");
+    els.photoUploadStatus = byId("photoUploadStatus");
     els.photoFilter = byId("photoFilter");
     els.photoList = byId("photoList");
     els.toast = byId("toast");
@@ -186,26 +189,31 @@
       "</article>";
   }
 
-  function saveSelectedPhoto(type, input, noteEl) {
+  async function saveSelectedPhoto(type, input, noteEl) {
     var file = input.files && input.files[0];
     input.value = "";
-    if (!file) {
-      return;
-    }
-
-    if (!file.type || file.type.indexOf("image/") !== 0) {
-      showToast("请选择图片文件");
-      return;
-    }
-
-    showToast("正在保存照片");
-    prepareImage(file).then(function (image) {
+    if (!file || state.saving) { return; }
+    state.saving = true;
+    [els.poopPhotoInput, els.poopGalleryInput, els.navelPhotoInput, els.navelGalleryInput].forEach(function (field) {
+      field.disabled = true;
+    });
+    els.photoUploadError.hidden = true;
+    els.photoUploadStatus.hidden = false;
+    var note = noteEl.value.trim();
+    var imageReady = false;
+    try {
+      var image = await BabyPhoto.prepare(file, {
+        maxEdge: MAX_IMAGE_EDGE,
+        quality: JPEG_QUALITY,
+        onProgress: function (message) { els.photoUploadStatus.textContent = message; }
+      });
+      imageReady = true;
       var nowIso = new Date().toISOString();
-      return addPhoto({
+      await addPhoto({
         id: createId(),
         type: type,
         uploadedAt: nowIso,
-        note: noteEl.value.trim(),
+        note: note,
         blob: image.blob,
         mimeType: image.mimeType,
         originalName: file.name || "",
@@ -213,71 +221,21 @@
         width: image.width || 0,
         height: image.height || 0
       });
-    }).then(function () {
       noteEl.value = "";
       showToast("照片已保存");
-      return loadAndRender();
-    }).catch(function () {
-      showToast("照片保存失败，可能是空间不足");
-    });
-  }
-
-  function prepareImage(file) {
-    return loadImage(file).then(function (image) {
-      var width = image.naturalWidth || image.width || 0;
-      var height = image.naturalHeight || image.height || 0;
-      var edge = Math.max(width, height);
-
-      if (!width || !height || edge <= MAX_IMAGE_EDGE) {
-        return {
-          blob: file,
-          height: height,
-          mimeType: file.type || "image/jpeg",
-          width: width
-        };
-      }
-
-      var scale = MAX_IMAGE_EDGE / edge;
-      var targetWidth = Math.round(width * scale);
-      var targetHeight = Math.round(height * scale);
-      var canvas = document.createElement("canvas");
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-      var ctx = canvas.getContext("2d");
-      ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
-
-      return canvasToBlob(canvas, "image/jpeg", JPEG_QUALITY).then(function (blob) {
-        return {
-          blob: blob,
-          height: targetHeight,
-          mimeType: "image/jpeg",
-          width: targetWidth
-        };
+      await loadAndRender();
+    } catch (error) {
+      els.photoUploadError.textContent = (file.name || "照片") + "：" +
+        (imageReady ? "照片保存失败，请检查浏览器可用空间后重试。" : BabyPhoto.errorMessage(error));
+      els.photoUploadError.hidden = false;
+      showToast("照片未能保存，请查看提示");
+    } finally {
+      state.saving = false;
+      els.photoUploadStatus.hidden = true;
+      [els.poopPhotoInput, els.poopGalleryInput, els.navelPhotoInput, els.navelGalleryInput].forEach(function (field) {
+        field.disabled = false;
       });
-    }).catch(function () {
-      return {
-        blob: file,
-        height: 0,
-        mimeType: file.type || "application/octet-stream",
-        width: 0
-      };
-    });
-  }
-
-  function loadImage(file) {
-    return new Promise(function (resolve, reject) {
-      var url = URL.createObjectURL(file);
-      var image = new Image();
-      image.onload = function () {
-        URL.revokeObjectURL(url);
-        resolve(image);
-      };
-      image.onerror = function () {
-        URL.revokeObjectURL(url);
-        reject(new Error("Image load failed"));
-      };
-      image.src = url;
-    });
+    }
   }
 
   function openPhoto(id) {
@@ -633,7 +591,7 @@
       return;
     }
 
-    navigator.serviceWorker.register("sw.js?v=38").catch(function () {
+    navigator.serviceWorker.register("sw.js?v=39").catch(function () {
       showToast("离线缓存暂不可用");
     });
   }

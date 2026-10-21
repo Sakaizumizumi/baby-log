@@ -314,11 +314,14 @@
 }
 
 .diary-error {
+  margin: 0;
   padding: 10px 12px;
   border-radius: 6px;
   color: #8c3325;
   background: #fff0ed;
   font-size: 0.9rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .diary-app button:disabled {

@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="照片记录">
     <title>新生儿照片记录</title>
-    <link rel="manifest" href="manifest.webmanifest?v=38">
+    <link rel="manifest" href="manifest.webmanifest?v=39">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=38">
-    <link rel="stylesheet" href="photos.css?v=38">
+    <link rel="stylesheet" href="styles.css?v=39">
+    <link rel="stylesheet" href="photos.css?v=39">
   </head>
   <body>
     <div class="app-shell photo-app">
@@ -53,17 +53,19 @@
             <button class="ghost-button compact-button" type="button" id="refreshPhotos">刷新</button>
           </div>
 
+          <p class="quick-time-hint" id="photoUploadStatus" role="status" hidden></p>
+          <p class="photo-upload-error" id="photoUploadError" role="alert" hidden></p>
           <div class="photo-upload-grid">
             <div class="photo-upload-block">
               <h3>大便照片</h3>
               <div class="photo-upload-actions">
                 <label class="secondary-button file-button photo-file-button">
                   拍照保存
-                  <input id="poopPhotoInput" type="file" accept="image/*" capture="environment">
+                  <input id="poopPhotoInput" type="file" accept="image/*,.heic,.heif,.hif" capture="environment">
                 </label>
                 <label class="secondary-button file-button photo-file-button">
                   从相册选择
-                  <input id="poopGalleryInput" type="file" accept="image/*">
+                  <input id="poopGalleryInput" type="file" accept="image/*,.heic,.heif,.hif,.jpg,.jpeg,.png,.webp,.avif">
                 </label>
               </div>
               <label class="field">
@@ -77,11 +79,11 @@
               <div class="photo-upload-actions">
                 <label class="secondary-button file-button photo-file-button">
                   拍照保存
-                  <input id="navelPhotoInput" type="file" accept="image/*" capture="environment">
+                  <input id="navelPhotoInput" type="file" accept="image/*,.heic,.heif,.hif" capture="environment">
                 </label>
                 <label class="secondary-button file-button photo-file-button">
                   从相册选择
-                  <input id="navelGalleryInput" type="file" accept="image/*">
+                  <input id="navelGalleryInput" type="file" accept="image/*,.heic,.heif,.hif,.jpg,.jpeg,.png,.webp,.avif">
                 </label>
               </div>
               <label class="field">
@@ -118,6 +120,7 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="photos.js?v=38" defer></script>
+    <script src="photo-utils.js?v=39" defer></script>
+    <script src="photos.js?v=39" defer></script>
   </body>
 </html>

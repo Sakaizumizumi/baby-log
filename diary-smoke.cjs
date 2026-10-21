@@ -159,10 +159,10 @@ async function add(page, text, time, first = false) {
     await page.reload();
     await page.waitForFunction(() => navigator.serviceWorker.controller && !document.getElementById("composerFields").disabled);
     const cached = await page.evaluate(async () => {
-      const cache = await caches.open("baby-log-pwa-v38");
+      const cache = await caches.open("baby-log-pwa-v39");
       return (await cache.keys()).map(req => new URL(req.url).pathname + new URL(req.url).search);
     });
-    assert.ok(cached.includes("/diary.js?v=38"));
+    assert.ok(cached.includes("/diary.js?v=39"));
     assert.ok(cached.includes("/records.html"));
     assert.ok(!cached.some(name => /analysis\.(js|css)/.test(name)));
     await context.setOffline(true);
@@ -180,7 +180,7 @@ async function add(page, text, time, first = false) {
     await page.goto(base + "/analysis.html");
     await page.waitForURL("**/index.html"); await count(page, 5);
     assert.deepEqual(errors, []);
-    console.log("PASS v38 cache, offline page loads, offline writes, retained pages, old-analysis redirect");
+    console.log("PASS v39 cache, offline page loads, offline writes, retained pages, old-analysis redirect");
     console.log("All diary smoke checks passed.");
   } finally {
     if (browser) { await browser.close(); }

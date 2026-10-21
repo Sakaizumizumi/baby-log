@@ -27,7 +27,7 @@
       "diaryForm", "composerFields", "composerTitle", "todayLabel", "storageError",
       "entryText", "entryTime", "entryFirst", "diaryNow", "chooseImages",
       "takePhoto", "entryPhotos", "cameraPhoto", "attachmentCount",
-      "attachmentPreview", "saveEntry", "cancelEntryEdit", "diaryTab",
+      "attachmentPreview", "photoError", "saveEntry", "cancelEntryEdit", "diaryTab",
       "firstsTab", "diaryCount", "firstsCount", "diaryDateFilter",
       "clearDiaryFilter", "diaryPanel", "firstsPanel", "diaryList", "firstsList",
       "exportDiary", "importDiaryButton", "importDiary", "diaryPhotoDialog",
@@ -242,46 +242,30 @@
       return;
     }
     setBusy(true);
+    els.photoError.hidden = true;
+    var photos = [];
+    var failures = [];
     try {
-      var photos = [];
-      for (var file of files) {
-        if (file.type.indexOf("image/") !== 0) { throw new Error("请选择图片文件"); }
-        photos.push(await prepareImage(file));
+      for (var index = 0; index < files.length; index += 1) {
+        try {
+          photos.push(await BabyPhoto.prepare(files[index], {
+            onProgress: function (message) {
+              els.attachmentCount.textContent = message + "（" + (index + 1) + "/" + files.length + "）";
+            }
+          }));
+        } catch (error) {
+          failures.push((files[index].name || "照片 " + (index + 1)) + "：" + BabyPhoto.errorMessage(error));
+        }
       }
       state.attachments = state.attachments.concat(photos);
+      if (failures.length) {
+        els.photoError.textContent = failures.join("\n");
+        els.photoError.hidden = false;
+        showToast(photos.length ? "已添加 " + photos.length + " 张，" + failures.length + " 张未能读取" : "照片未能读取，请查看提示");
+      }
+    } finally {
       renderAttachments();
-    } catch (error) {
-      showToast("图片无法读取，请尝试 JPG、PNG 或 WebP 图片");
-    } finally {
       setBusy(false);
-    }
-  }
-
-  async function prepareImage(file) {
-    var url = URL.createObjectURL(file);
-    try {
-      var image = await new Promise(function (resolve, reject) {
-        var img = new Image();
-        img.onload = function () { resolve(img); };
-        img.onerror = reject;
-        img.src = url;
-      });
-      var scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
-      var canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-      var context = canvas.getContext("2d");
-      context.fillStyle = "#ffffff";
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      var blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (result) {
-          if (result) { resolve(result); } else { reject(new Error("Image encoding failed")); }
-        }, "image/jpeg", 0.84);
-      });
-      return { blob: blob, mimeType: blob.type, width: canvas.width, height: canvas.height };
-    } finally {
-      URL.revokeObjectURL(url);
     }
   }
 
@@ -305,6 +289,7 @@
     els.composerTitle.textContent = "记一件小事";
     els.saveEntry.textContent = "添加日记";
     els.cancelEntryEdit.hidden = true;
+    els.photoError.hidden = true;
     renderAttachments();
     updateTodayLabel();
   }
@@ -614,7 +599,7 @@
 
   function registerServiceWorker() {
     if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
-      navigator.serviceWorker.register("sw.js?v=38").catch(function () {
+      navigator.serviceWorker.register("sw.js?v=39").catch(function () {
         showToast("离线缓存暂不可用");
       });
     }

@@ -7,12 +7,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="宝宝日记">
     <title>宝宝日记</title>
-    <link rel="manifest" href="manifest.webmanifest?v=38">
+    <link rel="manifest" href="manifest.webmanifest?v=39">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon.svg">
-    <link rel="stylesheet" href="styles.css?v=38">
-    <link rel="stylesheet" href="diary.css?v=38">
-    <script src="diary.js?v=38" defer></script>
+    <link rel="stylesheet" href="styles.css?v=39">
+    <link rel="stylesheet" href="diary.css?v=39">
+    <script src="photo-utils.js?v=39" defer></script>
+    <script src="diary.js?v=39" defer></script>
   </head>
   <body>
     <div class="app-shell diary-app">
@@ -51,11 +52,12 @@
               <div class="diary-attachment-toolbar">
                 <button class="secondary-button compact-button" id="chooseImages" type="button">添加图片</button>
                 <button class="ghost-button compact-button" id="takePhoto" type="button">拍照</button>
-                <span class="diary-subtle" id="attachmentCount"></span>
-                <input id="entryPhotos" type="file" accept="image/*" multiple hidden>
-                <input id="cameraPhoto" type="file" accept="image/*" capture="environment" hidden>
+                <span class="diary-subtle" id="attachmentCount" role="status"></span>
+                <input id="entryPhotos" type="file" accept="image/*,.heic,.heif,.hif,.jpg,.jpeg,.png,.webp,.avif" multiple hidden>
+                <input id="cameraPhoto" type="file" accept="image/*,.heic,.heif,.hif" capture="environment" hidden>
               </div>
               <div class="diary-attachments" id="attachmentPreview" aria-label="待保存图片"></div>
+              <p class="diary-error" id="photoError" role="alert" hidden></p>
               <div class="diary-submit-row">
                 <label class="diary-first-check">
                   <input id="entryFirst" type="checkbox">
